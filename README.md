@@ -373,8 +373,26 @@ encoder is nonlinear, so a linear readout of its features can outperform one of 
 The R² values do not show whether an association is positive or negative, or establish that a
 feature causes the physical behaviour.
 
-Discovery uses validation states 60–119 from the original trajectory. The evaluation uses 150
-states each from seeds 9, 14 and 35, started at the corresponding stage of the simulation.
+We can also look at where features activate across the grid:
+
+![Feature maps alongside physical fields](figures/sae_feature_maps.png)
+
+*Figure 8b — one validation state. The left panels show v and its spatial Laplacian; the
+right panels show the corresponding SAE feature activations. Each panel has its own colour
+scale. The displayed Pearson correlations r are calculated across 40 evaluation states,
+not just the state shown.*
+
+The features were selected by their correlation with each quantity on validation states
+60–99 and evaluated on states 100–139 from the same trajectory. Reproduce the figure with:
+
+```bash
+python feature_maps.py --data data/gray_scott.npz --model-dir model --figures figures \
+  --fit-start 60 --fit-states 40 --eval-states 40 --threads 4
+```
+
+For Figure 8, discovery uses validation states 60–119 from the original trajectory. The
+evaluation uses 150 states each from seeds 9, 14 and 35, started at the corresponding stage
+of the simulation.
 These seeds were selected because their patterns survived, and have been explored before:
 they are separate simulations, but not a fresh blind test. Cells and successive states are
 correlated. The output JSON includes each seed's R² and cell count.
