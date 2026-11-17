@@ -26,13 +26,13 @@ Main results:
 | 2 | and bistable | **4 of 5** runs from the same 25 discs at different random offsets end in the uniform state $u = 1$, $v = 0$; the fifth keeps a pattern |
 | 3 | the emulator is accurate on a single call | test RMSE **0.040**, against **0.516** for repeating the input and **0.997** for the average field |
 | 4 | it follows the pattern for ten free calls | validation rollout RMSE **0.684**; coverage **0.119** against **0.120** in the simulator |
-| 5 | the dictionary is a faithful re-encoding | reconstruction **0.996** on held-out cells, with the token needing **8** of 32 principal directions for 95% of its variance |
+| 5 | the block-6 SAE reconstructs the emulator's activations | validation reconstruction score **0.988**; **8** principal components explain 95% of training activation variance |
 | 6 | one direction recovers most of one physical quantity | best single latent R² **0.842** on *the field v*, against **0.992** present in the layer |
 | 7 | a direction sees an event coming | *a blob is about to be born here* at AUROC **0.694**, against **0.434** for looking at how much spot is already there |
 | 8 | pushing one does not nucleate a spot in the model | a blob appeared at the pushed cell in **0%** of pairs — the strongest direction, the weakest and a random one alike |
 | 9 | the same nudge, given to the equations | **25%** of those nudges nucleate a spot in the **true** system |
 
-**Note:** results 5–9 and sections 4–7 describe the previous four-block emulator, not the
+**Note:** results 6–9 and sections 5–7 describe the previous four-block emulator, not the
 new seven-block emulator in section 3. They have not yet been regenerated for the new model.
 
 ## 1. The system
@@ -263,39 +263,53 @@ the longer continuations can extend beyond the validation block.
 *What to run:*
 
 ```bash
-../../.venv/bin/python train_sae.py --data data/gray_scott.npz --model-dir model --figures figures
+python train_sae.py --data data/gray_scott.npz --model-dir model --figures figures \
+  --layer blocks.6 --n-latent 512 --k 16 --epochs 120 --train-states 300 \
+  --val-states 60 --seed 0 --threads 4
 ```
 
-An SAE is a second, separate network with one job: rebuild a token. It has 512 **directions**,
-each as long as a token; for each token it scores every direction, keeps the 16 with the largest
-scores, sets the rest to exactly zero, and adds the survivors back up. Training makes that sum as
-close to the original token as possible. It never sees the grid, the equations, the next state or
-any label.
+First generate the data and train the emulator as described in section 3. The SAE reads the
+saved `model/emulator.pt`; it does not retrain the emulator.
 
-Sparsity is the only pressure on the directions: a direction earns its place only by being worth
-adding to a token, 16 at a time, so a direction that mixes several quantities is at a disadvantage
-against one that carries a single quantity.
+An SAE is a second, separate network with one job: rebuild a token, the 32 numbers at one
+cell in the emulator's layer `blocks.6`. It has 512 learned **directions**, each 32 numbers
+long. For each token, the encoder keeps at most 16 nonzero feature activations; the decoder
+combines their directions to rebuild the token. It is trained on the emulator's activations,
+without physical labels or the next state.
 
-Two quantities bound what the dictionary can do, and both are measured:
+The layer is the last of seven blocks. Its theoretical receptive field is 45 × 45 cells, so
+each token can depend on a wider region around its cell.
 
-* **Reconstruction** — how much of the token comes back. A dictionary that cannot rebuild the
-  token is not describing the layer. This one rebuilds **0.996** of the training tokens and
-  **0.996** of tokens from a block it never saw.
-* **Principal dimension** — how many directions the token distribution itself needs before 95% of
-  its variance is accounted for: **8 of 32** for 95%, 18 for 99%. This bounds any dictionary on
-  this layer: a quantity spread over those 8 directions cannot sit in one of them.
+Two useful checks are:
 
-The layer is `blocks.2`, the third of four. A token there has passed through blocks reaching 1, 2
-and 4 cells, so it sees a 15 × 15 window — wide enough to hold a whole spot with its
-surroundings.
+* **Reconstruction:** `1 - mean squared reconstruction error / mean activation variance`.
+  The scores are **0.989** on training tokens and **0.988** on validation tokens. A score of
+  1 is perfect; high reconstruction alone does not establish that the features have clear
+  physical meanings.
+* **PCA:** on the training activations, **8 of 32** principal components explain 95% of
+  the variance and **19** explain 99%. PCA summarises the variation in the original tokens;
+  its components are not the SAE's sparse features.
 
 ![The SAE](figures/sae.png)
 
 *Figure 6 — a second, separate network that reads one layer and rebuilds it. It never sees the
 grid, the equations, or the next state.*
 
-The dictionary was trained on 1228800 tokens and checked on 245760 held out, in
-1070 seconds; 1 of the 512 directions never fires.
+The dictionary was trained on **1,228,800** tokens from 300 training states and checked on
+**245,760** tokens from 60 validation states. The validation states were also used to monitor
+SAE training, so they are not a final independent test. In the recorded run, all 512 features
+fired at least once on training tokens.
+
+![SAE training](figures/sae_training.png)
+
+*SAE training on block 6. Left: mean squared reconstruction error (training batch average
+and validation at the end of each epoch). Middle: reconstruction scores on both sets.
+Right: features that never fired during the training batches of each epoch.*
+
+The curves fluctuate considerably before settling. Features that do not fire during an epoch
+are resampled after that epoch, except the last. This resampling can change reconstruction
+and is a plausible contributor to the spikes. The training command above generates this plot
+as well as `figures/sae.png`.
 
 ## 5. What the tokens mean
 
@@ -468,5 +482,5 @@ Artifacts: `data/gray_scott.npz`; `model/emulator.pt` with `metrics.json` and `h
 
 `interpret.py` and `perturb.py` read `model/sae.pt`; `make_fig1.py` regenerates the system from
 the dataset settings. Environment: NumPy, PyTorch, Matplotlib (`requirements.txt`), single
-process, CPU only. Timings on four CPU threads: emulator 2308 s, SAE 1070 s, `interpret.py`
+process, CPU only. Timings on four CPU threads: emulator 2308 s, SAE 1351 s, `interpret.py`
 2 min, `perturb.py` 3 min, other scripts under 1 min.
