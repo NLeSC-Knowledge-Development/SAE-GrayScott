@@ -24,15 +24,16 @@ Main results:
 |---|---|---|
 | 1 | the system is excitable, with a threshold that was measured | a seeded disc of $v$ survives from amplitude **0.15**, and below that it vanishes without trace |
 | 2 | and bistable | **4 of 5** runs from the same 25 discs at different random offsets end in the uniform state $u = 1$, $v = 0$; the fifth keeps a pattern |
-| 3 | the emulator is accurate enough to be worth interpreting | one-call RMSE **0.073**, against **0.516** for repeating the input and **0.997** for the average field |
-| 4 | and it keeps the pattern alive while it runs | after **25** calls on its own, coverage **0.138** against **0.113** in the true system |
+| 3 | the emulator is accurate on a single call | test RMSE **0.040**, against **0.516** for repeating the input and **0.997** for the average field |
+| 4 | it follows the pattern for ten free calls | validation rollout RMSE **0.684**; coverage **0.119** against **0.120** in the simulator |
 | 5 | the dictionary is a faithful re-encoding | reconstruction **0.996** on held-out cells, with the token needing **8** of 32 principal directions for 95% of its variance |
 | 6 | one direction recovers most of one physical quantity | best single latent R² **0.842** on *the field v*, against **0.992** present in the layer |
 | 7 | a direction sees an event coming | *a blob is about to be born here* at AUROC **0.694**, against **0.434** for looking at how much spot is already there |
 | 8 | pushing one does not nucleate a spot in the model | a blob appeared at the pushed cell in **0%** of pairs — the strongest direction, the weakest and a random one alike |
 | 9 | the same nudge, given to the equations | **25%** of those nudges nucleate a spot in the **true** system |
 
-Every number here comes from the stored measurements; §8 says how.
+**Note:** results 5–9 and sections 4–7 describe the previous four-block emulator, not the
+new seven-block emulator in section 3. They have not yet been regenerated for the new model.
 
 ## 1. The system
 
@@ -166,22 +167,41 @@ not trained on.
 
 *What to run:*
 
+Install the dependencies in `requirements.txt` in your Python environment, then run:
+
 ```bash
-../../.venv/bin/python train_emulator.py --data data/gray_scott.npz --model-dir model --figures figures
+python -m pip install -r requirements.txt
+python generate_data.py --out data
+python train_emulator.py --data data/gray_scott.npz --model-dir model --figures figures \
+  --architecture 32-32-32-32-32-32-32 --dilations 1,2,4,8,4,2,1 \
+  --epochs 80 --seed 0 --evaluation-split val --rollout-calls 10
 ```
+
+This writes the architecture, training and ten-call rollout figures shown below. To reproduce
+the 25-call figure as well, run the same training command with a separate figure directory:
+
+```bash
+python train_emulator.py --data data/gray_scott.npz --model-dir model \
+  --figures figures/rollout_25 --architecture 32-32-32-32-32-32-32 \
+  --dilations 1,2,4,8,4,2,1 --epochs 80 --seed 0 \
+  --evaluation-split val --rollout-calls 25
+```
+
+This second command **retrains the emulator** and replaces the files in `model/`; its
+25-call plot is `figures/rollout_25/skill.png`. The rollout length is controlled by
+`--rollout-calls` (default: 10), and the results can vary slightly across environments.
 
 ### 3.1 Architecture
 
 The system is a torus, so the emulator is a torus.
 
-* each cell carries a **token** of 32 numbers, and all four blocks are 32 wide;
+* each cell carries a **token** of 32 numbers, and all seven blocks are 32 wide;
 * an `embed` convolution turns the two fields at the two recorded times — four numbers — into
   that token;
-* four residual blocks, each a convolution with **circular** padding, so the bottom row is next to
+* seven residual blocks, each a convolution with **circular** padding, so the bottom row is next to
   the top one and no cell is special;
-* the blocks are **dilated** by 1, 2, 4, 8 cells. Dilating instead of stacking is what
-  makes a wide window affordable: four blocks reach 15 cells to either side, where
-  fifteen blocks of plain 3 × 3 would have been needed;
+* the blocks are **dilated** by 1, 2, 4, 8, 4, 2, 1 cells. Together they reach 22 cells
+  to either side, a 45 × 45 theoretical receptive field;
 * the head turns the token back into the two fields, and the prediction is added to the last input
   state, so what the network actually produces is the *change* over the 100 steps.
 
@@ -189,20 +209,22 @@ The system is a torus, so the emulator is a torus.
 
 *Figure 3 — the system, and the stack built to imitate it.*
 
-The model has **41762** parameters, trained for 35 epochs in
-925 seconds on four CPU threads, keeping the epoch with the best validation
-error. §5.1 measures its 15-cell window against the trained network.
+The model has **72,866** parameters. In the recorded run it trained for 80 epochs
+on four CPU threads and kept epoch **74**, with the best validation error.
 
 ### 3.2 One call
 
-On the test block the emulator's error is **0.073** in standardised units (0.0109 in the fields'
+On the test block the emulator's error is **0.040** in standardised units (0.0058 in the fields'
 own units), against **0.516** for repeating the input and 0.997 for the average field — about
-**7 times** better than the trivial forecast it has to beat. The spots peak at $v = 0.4$, so that
-error is about 3% of a spot's height.
+**13 times** better than repeating the input.
 
 ![Training](figures/training.png)
 
-*Figure 4 — training. The validation blocks are pattern states the emulator was never shown.*
+*Figure 4 — training and validation curves for the one-call loss. Left: mean squared error in
+standardised units; right: its square root, with the best validation epoch marked.*
+
+The training curves show how the one-call error changes with each epoch. The validation block
+is not used for gradient updates, but it is used to choose the saved epoch.
 
 ### 3.3 Run on its own
 
@@ -211,16 +233,30 @@ feeding the next call, against the true system from the same states.
 
 ![Skill](figures/skill.png)
 
-*Figure 5 — what a free rollout does. Top left: the error against the two trivial forecasts, on a
-log scale. Top right: how much of the pattern is left, in coverage and in blob count. Bottom: the
-true fields and the emulator's, 25 calls later.*
+*Figure 5 — free rollout from 16 validation starting states. Top: error and coverage averaged
+across starts; the dashed and dotted lines are one-call baseline errors, not rollout baselines.
+Bottom: the simulator and emulator fields for the first start after ten calls.*
 
-The error grows from 0.088 after one call to 0.921 after 10 and 1.318 after 25, and by call 25 the
-two fields are different patterns of spots. The coverage and the blob count still
-match where the fields do not: after 10 calls the emulator's coverage is 0.113 against the true
-0.118, and it has 32 blobs against 30. A chaotic pattern can be reproduced statistically long
-after its individual spots can be reproduced, and it is that population of spots the rest of this
-folder is about.
+The standardised RMSE grows from **0.037** after one call to **0.684** after ten.
+At ten calls coverage is **0.119** versus **0.120** in the simulator, and the estimated
+mean blob count is **31.5** versus **31.0**. These are averages; matching counts does not
+guarantee that individual blobs match. The validation data also selected the training
+checkpoint, so this is not an independent test of model selection.
+
+We focus on ten calls (1,000 simulator steps): this is a useful short horizon for this
+evolving, chaotic pattern, where small errors can grow over time. Agreement over ten calls
+is encouraging, but does not establish accuracy over longer rollouts.
+
+![Skill after 25 calls](figures/rollout_25/skill.png)
+
+*Figure 5b — the same validation starting states, after 25 calls. The curves average over
+the 16 starts; the fields show the first start.*
+
+After **25 calls**, standardised RMSE rises to **1.237**. Mean coverage is **0.097** for
+the emulator versus **0.101** for the simulator, but the example fields no longer match
+well in detail. Similar coverage alone is not evidence that the emulator tracks individual
+spots indefinitely. These comparisons use simulator continuations from validation starts;
+the longer continuations can extend beyond the validation block.
 
 ## 4. The sparse autoencoder
 
@@ -432,5 +468,5 @@ Artifacts: `data/gray_scott.npz`; `model/emulator.pt` with `metrics.json` and `h
 
 `interpret.py` and `perturb.py` read `model/sae.pt`; `make_fig1.py` regenerates the system from
 the dataset settings. Environment: NumPy, PyTorch, Matplotlib (`requirements.txt`), single
-process, CPU only. Timings on four CPU threads: emulator 925 s, SAE 1070 s, `interpret.py`
+process, CPU only. Timings on four CPU threads: emulator 2308 s, SAE 1070 s, `interpret.py`
 2 min, `perturb.py` 3 min, other scripts under 1 min.
