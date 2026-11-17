@@ -32,7 +32,7 @@ Main results:
 | 8 | pushing one does not nucleate a spot in the model | a blob appeared at the pushed cell in **0%** of pairs — the strongest direction, the weakest and a random one alike |
 | 9 | the same nudge, given to the equations | **25%** of those nudges nucleate a spot in the **true** system |
 
-**Note:** results 6–9 and sections 5–7 describe the previous four-block emulator, not the
+**Note:** results 6–9 and sections 5.2–7 describe the previous four-block emulator, not the
 new seven-block emulator in section 3. They have not yet been regenerated for the new model.
 
 ## 1. The system
@@ -300,6 +300,15 @@ The dictionary was trained on **1,228,800** tokens from 300 training states and 
 SAE training, so they are not a final independent test. In the recorded run, all 512 features
 fired at least once on training tokens.
 
+![SAE firing rates](figures/sae_firing_rates.png)
+
+*Feature firing rates on the training tokens, sorted from most to least frequent. The x-axis
+is a rank, not a feature number; the y-axis is the fraction of cells where a feature is on.*
+
+Some features are active in many cells, while **366 of 512** are active in fewer than 1%
+of the training tokens. Rates close to zero can be hard to distinguish on this linear scale;
+a rare feature is not necessarily a feature for a rare physical event.
+
 ![SAE training](figures/sae_training.png)
 
 *SAE training on block 6. Left: mean squared reconstruction error (training batch average
@@ -308,30 +317,34 @@ Right: features that never fired during the training batches of each epoch.*
 
 The curves fluctuate considerably before settling. Features that do not fire during an epoch
 are resampled after that epoch, except the last. This resampling can change reconstruction
-and is a plausible contributor to the spikes. The training command above generates this plot
-as well as `figures/sae.png`.
+and is a plausible contributor to the spikes. The training command above generates all three
+SAE figures.
 
 ## 5. What the tokens mean
 
-*What to run:*
-
-```bash
-../../.venv/bin/python interpret.py --data data/gray_scott.npz --model-dir model --figures figures
-```
-
 ### 5.1 The receptive field, measured
 
-The architecture says a token at this layer can be affected by the 7 cells to either
-side and by no others. That is checkable: perturb the fields at **one cell** and measure how much
-the token changes at every other cell.
+After training the emulator and SAE as described above, reproduce the figure with:
+
+```bash
+python interpret.py --data data/gray_scott.npz --model-dir model --figures figures \
+  --state-start 60 --states 120 --receptive-field-only --threads 4
+```
+
+The architecture says a block-6 token can be affected by cells up to **22 cells away** in
+each direction. To check the horizontal profile, we perturb both fields at one cell in both
+input frames by +0.5 or −0.5 standard deviations, run the emulator, and compare the block-6
+tokens along the same row. This is a measurement of the emulator's response, not an injected
+blob event.
 
 ![The receptive field](figures/receptive_field.png)
 
-*Figure 7 — how far from the perturbed cell the token still changes.*
+*Figure 7 — the norm of the mean token difference across 120 validation states, at each
+horizontal offset from the perturbed cell. The shaded region is the theoretical radius.*
 
-Inside the window the token changes by 0.524 on average (Euclidean norm); outside it the change is
-**0.00e+00**, exactly zero. The support follows from the architecture, and the trained network
-matches it to machine precision.
+The largest measured response outside the predicted radius is **0.00e+00** on this
+horizontal line. Responses near the centre are much larger than those near the edge; this
+single perturbation and profile do not measure every input or spatial direction.
 
 ### 5.2 What one direction holds
 

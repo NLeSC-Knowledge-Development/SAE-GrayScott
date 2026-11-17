@@ -39,7 +39,7 @@ token from the first block sees one cell to either side and cannot know whether 
 blob.
 
 Writes ``<model-dir>/sae.pt``, ``sae_metrics.json`` and ``sae_history.json``, and
-``<figures>/sae.png`` and ``sae_training.png``.
+``<figures>/sae.png``, ``sae_training.png`` and ``sae_firing_rates.png``.
 """
 
 from __future__ import annotations
@@ -357,6 +357,21 @@ def training_figure(history, out_path, dpi=150):
     return out_path
 
 
+def firing_rate_figure(firing_rates, layer, out_path, dpi=150):
+    """Plot each feature's fraction of active training tokens, sorted by frequency."""
+    rates = np.sort(np.asarray(firing_rates))[::-1]
+    fig, axis = plt.subplots(figsize=(7, 4.5))
+    axis.plot(np.arange(1, len(rates) + 1), rates, color=TRAIN_COLOUR)
+    axis.set(xlabel="feature rank (most to least active)",
+             ylabel="fraction of training tokens active", title=f"{layer}: feature activity")
+    axis.grid(alpha=0.3)
+    fig.tight_layout()
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(out_path, dpi=dpi)
+    plt.close(fig)
+    return out_path
+
+
 # ----------------------------------------------------------------------------------- main
 
 
@@ -444,6 +459,8 @@ def main():
     (model_dir / "sae_history.json").write_text(json.dumps(history, indent=2))
     sae_figure(n_input, args.n_latent, args.k, args.layer, Path(args.figures) / "sae.png")
     training_figure(history, Path(args.figures) / "sae_training.png")
+    firing_rate_figure(metrics["firing_rate"], args.layer,
+                       Path(args.figures) / "sae_firing_rates.png")
 
     # ---------------------------------------------------------------------- what we found
     print(f"trained the SAE for {args.epochs} epochs in {elapsed:.0f}s")
@@ -462,6 +479,7 @@ def main():
     print(f"wrote {model_dir / 'sae_metrics.json'}")
     print(f"wrote {Path(args.figures) / 'sae.png'}")
     print(f"wrote {Path(args.figures) / 'sae_training.png'}")
+    print(f"wrote {Path(args.figures) / 'sae_firing_rates.png'}")
 
 
 if __name__ == "__main__":
