@@ -27,12 +27,12 @@ Main results:
 | 3 | the emulator is accurate on a single call | test RMSE **0.040**, against **0.516** for repeating the input and **0.997** for the average field |
 | 4 | it follows the pattern for ten free calls | validation rollout RMSE **0.684**; coverage **0.119** against **0.120** in the simulator |
 | 5 | the block-6 SAE reconstructs the emulator's activations | validation reconstruction score **0.988**; **8** principal components explain 95% of training activation variance |
-| 6 | one direction recovers most of one physical quantity | best single latent R² **0.842** on *the field v*, against **0.992** present in the layer |
-| 7 | a direction sees an event coming | *a blob is about to be born here* at AUROC **0.694**, against **0.434** for looking at how much spot is already there |
+| 6 | one feature predicts much of local v | feature **117**: R² **0.842**, compared with **0.989** using the original block-6 layer |
+| 7 | detected centre events need careful interpretation | a centre appearing or disappearing is not necessarily a blob being born or dying |
 | 8 | pushing one does not nucleate a spot in the model | a blob appeared at the pushed cell in **0%** of pairs — the strongest direction, the weakest and a random one alike |
 | 9 | the same nudge, given to the equations | **25%** of those nudges nucleate a spot in the **true** system |
 
-**Note:** results 6–9 and sections 5.2–7 describe the previous four-block emulator, not the
+**Note:** results 8–9 and sections 6–7 describe the previous four-block emulator, not the
 new seven-block emulator in section 3. They have not yet been regenerated for the new model.
 
 ## 1. The system
@@ -300,7 +300,7 @@ The dictionary was trained on **1,228,800** tokens from 300 training states and 
 SAE training, so they are not a final independent test. In the recorded run, all 512 features
 fired at least once on training tokens.
 
-![SAE firing rates](figures/sae_firing_rates.png)
+<img src="figures/sae_firing_rates.png" alt="SAE firing rates" width="400">
 
 *Feature firing rates on the training tokens, sorted from most to least frequent. The x-axis
 is a rank, not a feature number; the y-axis is the fraction of cells where a feature is on.*
@@ -342,47 +342,49 @@ blob event.
 *Figure 7 — the norm of the mean token difference across 120 validation states, at each
 horizontal offset from the perturbed cell. The shaded region is the theoretical radius.*
 
-The largest measured response outside the predicted radius is **0.00e+00** on this
-horizontal line. Responses near the centre are much larger than those near the edge; this
+No response was measured outside the predicted radius along this horizontal line. Responses
+near the centre are much larger than those near the edge; this
 single perturbation and profile do not measure every input or spatial direction.
 
-### 5.2 What one direction holds
+### 5.2 Exploring features with physical questions
 
-The quantities the equation is built from, one number per cell, each paired with that cell's own
-token. For each, three things are measured: the best *single* latent, all 512 read jointly, and
-the layer's own numbers, which is the ceiling. The best single latent is chosen on one half of the
-cells and scored on the other, so the number quoted is not the largest of 512 reported on the
-cells that chose it.
+After training the emulator and SAE as described above, reproduce the figure and the per-seed
+scores in `model/physical_probes.json` with:
 
-![Features](figures/features.png)
+```bash
+python physical_probes.py --data data/gray_scott.npz --model-dir model --figures figures \
+  --seeds 9 14 35 --states 150 --threads 4
+```
 
-*Figure 8 — left: the nine physical quantities and the control, each with the three read-outs
-beside it. Right: whether a direction reads an event before it happens, against how much spot is
-already in the patch.*
+Each question is one number per cell, paired with that cell's block-6 token. We fit three linear
+readouts: from one SAE feature, from all 512 SAE features together, and from the original 32
+layer values. The feature number on each row identifies the best single feature, selected on
+the discovery states. All readouts are fitted there and evaluated on different simulations.
 
-The best single latent reaches **0.842** on *the field v* (latent 9). No non-control quantity
-falls below **0.128**, while the layer holds the same quantities at R² **0.558–0.992**. The
-control is separate: the layer holds the grid's average at 0.307, and one direction carries 0.013
-of it.
+![Physical questions](figures/physical_questions.png)
 
-So the physics is present in the layer, and one direction carries only part of it: with 8 of 32
-directions needed for 95% of the variance, no single direction can carry a quantity spread over
-the rest.
+*Figure 8 — pooled R² across three simulator seeds. R² of 1 is perfect and 0 matches predicting
+the evaluation-set mean; negative values are possible. The number in each row is the selected
+single feature. Gradients are spatial, not velocities.*
 
-### 5.3 A direction that sees an event coming
+For example, feature **117** predicts local v with R² **0.842**, while all SAE features together
+reach **0.994** and the original layer reaches **0.989**. The layer is not a ceiling: the SAE
+encoder is nonlinear, so a linear readout of its features can outperform one of the layer.
+The R² values do not show whether an association is positive or negative, or establish that a
+feature causes the physical behaviour.
 
-The quantities above are properties of the present state. A blob appearing and a blob disappearing
-happen in the next state, so a direction that ranks them is carrying information about the future
-rather than about the present. Two labels, taken from the next state and applied to the cell:
-*a blob is about to be born within a few cells of here*, and *the blob here is about to die*.
+Discovery uses validation states 60–119 from the original trajectory. The evaluation uses 150
+states each from seeds 9, 14 and 35, started at the corresponding stage of the simulation.
+These seeds were selected because their patterns survived, and have been explored before:
+they are separate simulations, but not a fresh blind test. Cells and successive states are
+correlated. The output JSON includes each seed's R² and cell count.
 
-They are binary and rare, so they are scored by AUROC, the chance a positive cell is ranked above
-a negative one, and the reference is not 0.5 but what an observer would use: how much spot is
-already in the patch.
-
-**0.015** of cells are within a few cells of a blob that does not yet exist, and the best direction
-separates those at **0.694**, against 0.434 for how much spot is already in the patch. A blob
-disappearing is commoner (0.051 of cells) and read better: **0.747** against 0.165.
+The 11×11 patch and the centre distances wrap around the periodic grid. Centre distances use
+the spot detector; states with fewer than one or two detected centres are excluded for the
+respective distance. Previous and next changes are differences over one emulator call (100
+simulation steps); the next change comes from the true simulator, not an emulator rollout.
+The reaction-minus-drain quantity excludes diffusion. The grid-mean row is a control for a
+global quantity; it is not guaranteed to have zero predictability.
 
 ## 6. The push
 
@@ -469,9 +471,8 @@ when pushed is the mechanism by which the model grows spots.
   were going to appear anyway *in the model's own rollout*. It cannot remove the possibility that
   the emulator's error and the push interact, and it says nothing about whether a real Gray-Scott
   experiment would respond to a nudge applied to a network.
-* **The events are defined by a detector.** A blob is the brightest cell of a connected region
-  above a threshold, found by non-maximum suppression. A different detector would give different
-  base rates in §5.3, which is why each AUROC is reported next to its reference.
+* **The events are defined by a detector.** A centre is detected from local maxima above a
+  threshold. A different detector can give different event labels.
 * **The nudge is the emulator's, not an experiment's.** §6.3 adds the field difference the push
   makes to the true state, which is a translation: the push acts on a network's activations, and
   the equations are only ever given the resulting change in the field.
