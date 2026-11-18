@@ -1,5 +1,20 @@
 # SAE for a Gray-Scott emulator
 
+## Contents
+
+- [Summary](#summary)
+- [1. The system](#1-the-system)
+- [2. The task and the data](#2-the-task-and-the-data)
+- [3. The emulator](#3-the-emulator)
+- [4. The sparse autoencoder](#4-the-sparse-autoencoder)
+- [5. What the tokens mean](#5-what-the-tokens-mean)
+  - [Receptive field](#51-the-receptive-field-measured)
+  - [Physical questions](#52-exploring-features-with-physical-questions)
+  - [Feature relationship study](#53-feature-relationship-study)
+- [6. The push](#6-the-push)
+- [7. What this means](#7-what-this-means)
+- [8. Files](#8-files)
+
 ## Summary
 
 A neural network is trained to imitate Gray-Scott, a pair of chemicals that react and diffuse on
@@ -404,6 +419,12 @@ simulation steps); the next change comes from the true simulator, not an emulato
 The reaction-minus-drain quantity excludes diffusion. The grid-mean row is a control for a
 global quantity; it is not guaranteed to have zero predictability.
 
+### 5.3 Feature relationship study
+
+For a closer look at each selected feature, see the **[feature relationship study](FEATURE_STUDY.md)**.
+It compares feature maps, firing frequency and activation strength against continuous physical
+quantities, with an explanation and a plot for each feature.
+
 ## 6. The push
 
 *What to run:*
@@ -503,6 +524,9 @@ when pushed is the mechanism by which the model grows spots.
 | `train_emulator.py` | the circular-convolution emulator: architecture figure, training, one-call metrics, free rollouts against two trivial forecasts |
 | `train_sae.py` | the TopK SAE on one layer's tokens: training, reconstruction, firing rates, principal dimension |
 | `interpret.py` | the receptive field, the quantities a token holds, and whether a direction can see a blob being born |
+| `physical_probes.py` | linear readouts of physical quantities from SAE features and layer tokens |
+| `feature_maps.py` | feature maps alongside local v and its Laplacian |
+| `feature_relationships.py` | feature maps and binned firing and strength plots for the [feature study](FEATURE_STUDY.md) |
 | `perturb.py` | ranks the directions, then pushes one at one cell and asks what followed, in the model and in the equations |
 | `make_fig1.py` | the system figure and the measurements that go with it: the pattern, the threshold map, and the two long-lived states |
 | `animate.py` | the moving pictures: the system running, each disc-shaped initial condition, the emulator's own rollout, and one push |
