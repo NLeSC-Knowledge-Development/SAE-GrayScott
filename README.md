@@ -11,6 +11,7 @@
   - [Receptive field](#51-the-receptive-field-measured)
   - [Physical questions](#52-exploring-features-with-physical-questions)
   - [Feature relationship study](#53-feature-relationship-study)
+  - [Blob division study](#54-blob-division-study)
 - [6. The push](#6-the-push)
 - [7. What this means](#7-what-this-means)
 - [8. Files](#8-files)
@@ -425,6 +426,11 @@ For a closer look at each selected feature, see the **[feature relationship stud
 It compares feature maps, firing frequency and activation strength against continuous physical
 quantities, with an explanation and a plot for each feature.
 
+### 5.4 Blob division study
+
+See the **[blob division study](DIVISION_STUDY.md)** for candidate division sequences,
+feature time courses, and an exploratory scan of cells near the estimated waist.
+
 ## 6. The push
 
 *What to run:*
@@ -527,6 +533,8 @@ when pushed is the mechanism by which the model grows spots.
 | `physical_probes.py` | linear readouts of physical quantities from SAE features and layer tokens |
 | `feature_maps.py` | feature maps alongside local v and its Laplacian |
 | `feature_relationships.py` | feature maps and binned firing and strength plots for the [feature study](FEATURE_STUDY.md) |
+| `block6_division_study.py` | simulate and detect candidate divisions and find matched controls |
+| `block6_clean_division_features.py`, `block6_waist_scan.py` | reproduce the feature time courses and waist comparisons in the [division study](DIVISION_STUDY.md) |
 | `perturb.py` | ranks the directions, then pushes one at one cell and asks what followed, in the model and in the equations |
 | `make_fig1.py` | the system figure and the measurements that go with it: the pattern, the threshold map, and the two long-lived states |
 | `animate.py` | the moving pictures: the system running, each disc-shaped initial condition, the emulator's own rollout, and one push |
