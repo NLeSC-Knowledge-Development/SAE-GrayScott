@@ -4,8 +4,7 @@
 
 We look for block-6 SAE features associated with **candidate blob divisions** in natural
 Gray-Scott simulations. The simulator supplies the states; the emulator processes those
-states and the SAE describes its internal activations. These are not free-running emulator
-rollouts, and the measurements do not show that a feature causes division.
+states and the SAE describes its internal activations. 
 
 ## Contents
 
@@ -20,15 +19,17 @@ rollouts, and the measurements do not show that a feature causes division.
 ## What data do we use?
 
 First generate the usual seed-0 dataset as in the
-[main README](README.md#3-the-emulator). It supplies the Gray-Scott settings and
+[main README](README.md#the-default-dataset). It supplies the Gray-Scott settings and
 training-set normalization for the model. The division events **do not come from that
 dataset's trajectory**.
 
 Instead, the scripts in sections 1–3 run six new, natural Gray-Scott simulations, using the same
 settings but initial-condition seeds 9, 14, 35, 39, 40 and 44. Each seed determines a
-different arrangement of initial spots. Reusing the same seed and settings regenerates
-the same trajectory; no divisions are injected. The simulations are recomputed by each
-script rather than stored as large trajectory files. Section 4 uses a separate set of
+different arrangement of initial spots. Seeds 9, 14 and 35 are also used to evaluate Figure 8
+in the main README, but here they are **discovery** seeds for division features; seeds 39,
+40 and 44 are the division-study evaluation seeds. Reusing the same seed and settings
+regenerates the same trajectory; no divisions are injected. The simulations are recomputed by
+each script rather than stored as large trajectory files. Section 4 uses a separate set of
 12 survival-screened seeds, listed there.
 
 For these settings, each run advances through 2,000 warm-up steps and a further

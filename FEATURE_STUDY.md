@@ -5,15 +5,15 @@
 These plots look more closely at the features associated with the physical questions in the
 [overview](README.md#52-exploring-features-with-physical-questions). They describe associations,
 not proof that a feature represents only one quantity or causes a physical effect. A feature can
-respond to several related properties at once. Blob division is a separate question and is not
-studied by these plots.
+respond to several related properties at once. Blob division is a separate question and is studied in the next section.
 
 ## How to read the plots
 
-- **Top left:** the physical quantity across one 64 × 64 grid. **Top right:** the feature's
+- **Top left:** the physical quantity across one 64 × 64 grid. 
+- **Top right:** the feature's
   activation at the same cells and time. Dark purple means the feature is off; colour scales
-  differ between panels. Most maps show validation state 180. Feature 94 instead shows a
-  deliberately selected state, described below.
+  differ between panels. Most maps show the same state from the validation dataset. Feature 94
+  instead shows a deliberately selected state, described below.
 - **Bottom left:** group cell observations by the physical quantity; the orange curve shows
   the percentage of each group where the feature is on (activation greater than zero).
 - **Bottom right:** for the same groups, the blue curve shows the median activation **only among
@@ -33,7 +33,8 @@ total and active counts, firing rates and strength summaries. The printed Pearso
 all valid cell observations, including zeros; it summarises a linear association and does not
 describe all the detail in the curves.
 
-The curves pool **54 validation states, indices 180–233, from simulation seed 0**. That gives
+The curves pool **54 states from part of the validation dataset** described in the
+[main README](README.md#the-default-dataset). That gives
 54 × 4096 cell observations before exclusions, but neighbouring cells and successive states are
 correlated: they are not independent samples. This trajectory and these features have been
 explored before, so this is not a blind test. For centre distances, cells in states without
@@ -46,8 +47,7 @@ trajectories.
 
 Local *v* is the concentration in the cell itself. Feature 117 is more often on as *v* rises,
 and its typical strength also rises. In the example, high activations broadly overlap the
-spots. This is a strong association in these states, not proof that the feature encodes
-only *v*.
+spots. This is a strong association in these states, but it is good to remember that the feature could encode other than v.
 
 ## Feature 159 — v Laplacian
 
@@ -58,7 +58,7 @@ often occur around local peaks, positive values around local dips. It is a prope
 current field, **not a change over time**; it contributes to diffusion in the equations.
 Feature 159 is on in most cells, so strength is more informative than a simple on/off label.
 Its median rises from negative towards moderately positive values, then falls again. It is not
-a simple one-to-one Laplacian meter.
+a simple one-to-one Laplacian meter. But there is for sure correlation.
 
 ## Feature 402 — horizontal spatial gradient
 
@@ -117,9 +117,9 @@ often in the group with the largest decreases, but even there only about 16% of 
 observations are on. Some strength points use very few cells, and bins without active cells
 have no point.
 
-The maps show **state 219**, selected from the 54 states because it has the most cells where
-feature 94 is on. This makes the feature visible, but is not a typical or randomly chosen
-example. The bottom curves still use all 54 states.
+The maps show the state selected from the 54 states because it has the most cells where feature
+94 is on. This makes the feature visible, but is not a typical or randomly chosen example.
+The bottom curves still use all 54 states.
 
 ## Feature 244 — grid-mean v control
 

@@ -63,6 +63,12 @@ section:*
 ../../.venv/bin/python animate.py --data data/gray_scott.npz --model-dir model --figures figures --only pattern,disc
 ```
 
+These system experiments run the simulator directly. The regime sweep changes the equation
+parameters; the disc experiments start from a uniform grid with one disc; and the bistability
+experiment uses several initial-condition seeds. The commands above generate these experiments.
+The default dataset supplies settings to `make_fig1.py` and `animate.py`, which simulate the
+fields again; using the same seed and settings does not create an independent trajectory.
+
 ### 1.1 Gray-Scott
 
 Gray-Scott is a pair of chemicals on a periodic grid of 64 × 64 cells. Both diffuse,
@@ -155,8 +161,26 @@ and raises if the pattern it drew died.
 
 ## 2. The task and the data
 
-The task is to predict the next recorded state: given the state and the state one emulator call
-ago, produce the state one call later.
+### What is a state?
+
+A **state** is a snapshot of the whole 64 × 64 grid at one moment: it contains both $u$ and
+$v$ at every cell. It is not a single blob or a single cell. The simulator changes the grid
+at every simulation step, and we record one state every **100 steps**.
+
+The emulator's task is to predict the next recorded state. Each input example contains two
+states: the **previous** snapshot and the **current** snapshot. The target is the snapshot
+100 steps after the current one:
+
+```text
+previous state          current state            target state
+step t - 100            step t                   step t + 100
+└──────────── emulator input ────────────┘
+```
+
+In the analyses below, “state” can also be shorthand for an input example containing both
+snapshots. A physical quantity or feature map normally refers to the current snapshot.
+Consecutive input examples overlap: the current snapshot of one is the previous snapshot of
+the next.
 
 **One call is 100 model steps.** With a single-step call the emulator would only have to reproduce
 the integrator's stencil cell by cell and there would be nothing to interpret; at 100 steps a spot
@@ -164,20 +188,62 @@ can appear, which depends on more than the two fields at that cell. A call is al
 600 steps over which the pattern decorrelates, so each prediction is an extrapolation, not a near
 copy of the input.
 
-The data are one 160000-step trajectory cut into three **contiguous blocks in time**, recorded
-every 100 steps: 1092 training pairs, 234 for validation and 233 for testing — 4472832, 958464 and
-954368 cells. Blocks are contiguous and separated by 2000 steps because neighbouring states share
-almost all their pattern, so a random split would put the answer to a test question in the
-training set. Each field is standardised by one mean and one standard deviation from the training
-block only — $u$: 0.700 ± 0.189, $v$: 0.081 ± 0.100 — one pair for the whole grid, since the
-system is the same everywhere.
+### The default dataset
+
+Run `python generate_data.py --out data` to create `data/gray_scott.npz`. With the defaults,
+the simulator starts with initial-condition seed 0, runs for 2,000 warm-up steps, and then
+records a further 160,000 steps. The resulting sequence of states is one **trajectory**: one
+simulation followed through time.
+
+We split this trajectory into three consecutive blocks:
+
+```text
+earlier ── [ training ] ── gap ── [ validation ] ── gap ── [ test ] ── later
+```
+
+| Name used below | Input examples | How it is used |
+|---|---:|---|
+| **Training dataset** | 1,092 | Train the emulator; a subset also provides activations for SAE training. |
+| **Validation dataset** | 234 | Monitor training and select the emulator checkpoint; also used in several analyses. |
+| **Test dataset** | 233 | Evaluate the trained emulator on a later time block. |
+
+Each example has an input pair and a target. These datasets are **not three separate
+simulations**: they are different periods of the same simulation. The configured gaps are
+20 recorded positions (2,000 simulator steps); the input and target windows extend around
+the block boundaries. The gaps separate the blocks, but the blocks are not
+independent trajectories.
+
+Each field is standardised using a mean and standard deviation calculated **only from the
+training inputs**: $u$: 0.700 ± 0.189, $v$: 0.081 ± 0.100. Below, “training”, “validation”
+and “test dataset” refer to these blocks unless an analysis explicitly describes other data.
 
 **How hard is the task?** Repeating the input costs **0.516** and predicting the average field
 0.997, in standardised units, so repeating the input is only half as good as knowing nothing.
 
-The test block's coverage runs from 0.013 to 0.204 (mean 0.114), so it holds patterns of different
-density rather than copies of one, and a low error on it means the emulator handles states it was
-not trained on.
+The test dataset's coverage runs from 0.013 to 0.204 (mean 0.114), so it holds patterns of
+different density rather than copies of one. A low error there shows performance on a later
+time block, not necessarily on a new simulation.
+
+### Additional simulations
+
+Some studies also use **new Gray-Scott simulations**, because all three parts of the default
+dataset come from the same simulation. Starting from different spot arrangements lets us
+check what happens in other trajectories, rather than only later in the original one.
+
+These simulations use the same equations and settings as the default dataset, but different
+initial-condition seeds. A seed determines the initial arrangement of spots. In particular,
+seeds **9, 14 and 35** are used both to evaluate Figure 8 and as discovery simulations in the
+[blob division study](DIVISION_STUDY.md). The division study also uses other seeds for
+evaluation and for its second-split analysis; it explains their roles and commands separately.
+These seeds were selected because their patterns survived and have been explored before, so
+they are not a fresh blind test.
+
+The analysis scripts generate the needed simulations themselves: they read the simulator
+settings and training-data normalisation from the default dataset, start with the requested
+seed, run the **Gray-Scott simulator**, and record states. They do not train a new emulator.
+The same seed and settings reproduce the same trajectory, although different scripts may
+record different lengths. The commands in the relevant sections regenerate the data; no
+separate saved trajectory files are required.
 
 ## 3. The emulator
 
@@ -225,8 +291,8 @@ The system is a torus, so the emulator is a torus.
 
 *Figure 3 — the system, and the stack built to imitate it.*
 
-The model has **72,866** parameters. In the recorded run it trained for 80 epochs
-on four CPU threads and kept epoch **74**, with the best validation error.
+The model has **72,866** parameters. In the recorded run it trained on the training dataset
+for 80 epochs on four CPU threads and kept epoch **74**, with the best validation error.
 
 ### 3.2 One call
 
@@ -311,10 +377,11 @@ Two useful checks are:
 *Figure 6 — a second, separate network that reads one layer and rebuilds it. It never sees the
 grid, the equations, or the next state.*
 
-The dictionary was trained on **1,228,800** tokens from 300 training states and checked on
-**245,760** tokens from 60 validation states. The validation states were also used to monitor
-SAE training, so they are not a final independent test. In the recorded run, all 512 features
-fired at least once on training tokens.
+The dictionary was trained on **1,228,800** tokens from part of the training dataset and
+checked on **245,760** tokens from part of the validation dataset. Each input example produces
+one token per grid cell. The validation data were also used to monitor SAE training, so they
+are not a final independent test. In the recorded run, all 512 features fired at least once
+on training tokens.
 
 <img src="figures/sae_firing_rates.png" alt="SAE firing rates" width="400">
 
@@ -340,6 +407,24 @@ SAE figures.
 
 ### 5.1 The receptive field, measured
 
+
+The architecture says a block-6 token can be affected by cells up to **22 cells away** in
+each direction. To check the horizontal profile, we perturb both fields at one cell in both
+input frames by +0.5 or −0.5 standard deviations, run the emulator, and compare the block-6
+tokens along the same row. This is a measurement of the emulator's response, not an injected
+blob event. The inputs come from part of the validation dataset.
+
+![The receptive field](figures/receptive_field.png)
+
+*Figure 7 — the norm of the mean token difference across 120 validation states, at each
+horizontal offset from the perturbed cell. The shaded region is the theoretical radius.*
+
+As expected, no response was measured outside the predicted radius along this horizontal
+line. This is the expected, reassuring result: the measured response stays within the
+architecture's predicted receptive field. Responses near the centre are much larger than
+those near the edge; this single perturbation and profile do not measure every input or
+spatial direction.
+
 After training the emulator and SAE as described above, reproduce the figure with:
 
 ```bash
@@ -347,35 +432,29 @@ python interpret.py --data data/gray_scott.npz --model-dir model --figures figur
   --state-start 60 --states 120 --receptive-field-only --threads 4
 ```
 
-The architecture says a block-6 token can be affected by cells up to **22 cells away** in
-each direction. To check the horizontal profile, we perturb both fields at one cell in both
-input frames by +0.5 or −0.5 standard deviations, run the emulator, and compare the block-6
-tokens along the same row. This is a measurement of the emulator's response, not an injected
-blob event.
-
-![The receptive field](figures/receptive_field.png)
-
-*Figure 7 — the norm of the mean token difference across 120 validation states, at each
-horizontal offset from the perturbed cell. The shaded region is the theoretical radius.*
-
-No response was measured outside the predicted radius along this horizontal line. Responses
-near the centre are much larger than those near the edge; this
-single perturbation and profile do not measure every input or spatial direction.
-
 ### 5.2 Exploring features with physical questions
 
-After training the emulator and SAE as described above, reproduce the figure and the per-seed
-scores in `model/physical_probes.json` with:
+Figure 8 asks: **can the emulator's internal activations be used to predict a physical
+quantity**, such as local $v$ or its spatial gradient? We want to see whether a relationship
+found in the original simulation also appears when the spots start in a different arrangement.
+The procedure is:
 
-```bash
-python physical_probes.py --data data/gray_scott.npz --model-dir model --figures figures \
-  --seeds 9 14 35 --states 150 --threads 4
-```
+1. **Choose and fit on the default validation dataset.** Feed its simulator states into the
+   trained emulator and pass the block-6 activations through the trained SAE. At each cell,
+   compare the SAE features with the physical quantity calculated from the simulator.
+   For each quantity, select the single feature with the best linear fit and fit a simple
+   readout from it. Also fit readouts using all 512 SAE features together and the original
+   32 block-6 values.
+2. **Check on three additional simulations.** Generate Gray-Scott trajectories with seeds
+   9, 14 and 35, as described in [Additional simulations](#additional-simulations).
+   Feed their simulator states into the **same trained emulator and SAE**, then apply the
+   readouts fitted in step 1. Compare their predictions with the physical quantities calculated
+   from the new simulator states.
 
-Each question is one number per cell, paired with that cell's block-6 token. We fit three linear
-readouts: from one SAE feature, from all 512 SAE features together, and from the original 32
-layer values. The feature number on each row identifies the best single feature, selected on
-the discovery states. All readouts are fitted there and evaluated on different simulations.
+We do not retrain the emulator, SAE or readouts on those three simulations. The new states
+come from the Gray-Scott simulator, not from a free-running emulator rollout. Using different
+simulations tests whether the associations extend beyond the trajectory used to fit them;
+it does not establish that a feature causes the physical behaviour.
 
 ![Physical questions](figures/physical_questions.png)
 
@@ -384,10 +463,17 @@ the evaluation-set mean; negative values are possible. The number in each row is
 single feature. Gradients are spatial, not velocities.*
 
 For example, feature **117** predicts local v with R² **0.842**, while all SAE features together
-reach **0.994** and the original layer reaches **0.989**. The layer is not a ceiling: the SAE
-encoder is nonlinear, so a linear readout of its features can outperform one of the layer.
-The R² values do not show whether an association is positive or negative, or establish that a
-feature causes the physical behaviour.
+reach **0.994** and the original layer reaches **0.989**. Other features seem to have lower R², and they will be studied more deeply in the following section.
+
+The R² values do not show whether an association is positive or negative.
+
+Reproduce Figure 8 and its per-seed scores with:
+
+```bash
+python physical_probes.py --data data/gray_scott.npz --model-dir model --figures figures \
+  --seeds 9 14 35 --states 150 --threads 4
+```
+
 
 We can also look at where features activate across the grid:
 
@@ -398,39 +484,37 @@ right panels show the corresponding SAE feature activations. Each panel has its 
 scale. The displayed Pearson correlations r are calculated across 40 evaluation states,
 not just the state shown.*
 
-The features were selected by their correlation with each quantity on validation states
-60–99 and evaluated on states 100–139 from the same trajectory. Reproduce the figure with:
+These plots show that feature 177 closely tracks the local v value, while feature 159 closely tracks its spatial Laplacian.
+
+Here, the spatial Laplacian of v is \(\nabla^2 v = \partial^2 v/\partial x^2 + \partial^2 v/\partial y^2\): it measures how v at a point differs from nearby values (local curvature), not how it changes over time.
+
+For this figure, both groups come from the **validation dataset**, not the three additional
+simulations used for Figure 8. We select each feature by its correlation with the quantity on
+one part of that dataset, then calculate its correlation on a later part. Both parts come from
+the same trajectory, and adjacent inputs at the boundary share a snapshot. Reproduce the figure
+with:
 
 ```bash
 python feature_maps.py --data data/gray_scott.npz --model-dir model --figures figures \
   --fit-start 60 --fit-states 40 --eval-states 40 --threads 4
 ```
 
-For Figure 8, discovery uses validation states 60–119 from the original trajectory. The
-evaluation uses 150 states each from seeds 9, 14 and 35, started at the corresponding stage
-of the simulation.
-These seeds were selected because their patterns survived, and have been explored before:
-they are separate simulations, but not a fresh blind test. Cells and successive states are
-correlated. The output JSON includes each seed's R² and cell count.
 
-The 11×11 patch and the centre distances wrap around the periodic grid. Centre distances use
-the spot detector; states with fewer than one or two detected centres are excluded for the
-respective distance. Previous and next changes are differences over one emulator call (100
-simulation steps); the next change comes from the true simulator, not an emulator rollout.
-The reaction-minus-drain quantity excludes diffusion. The grid-mean row is a control for a
-global quantity; it is not guaranteed to have zero predictability.
 
 ### 5.3 Feature relationship study
 
 For a closer look at each selected feature, see the **[feature relationship study](FEATURE_STUDY.md)**.
 It compares feature maps, firing frequency and activation strength against continuous physical
-quantities, with an explanation and a plot for each feature.
+quantities, with an explanation and a plot for each feature. It uses part of the validation
+dataset; the linked study gives the reproduction command.
 
 ### 5.4 Blob division study
 
 See the **[blob division study](DIVISION_STUDY.md)** for candidate division sequences,
 feature time courses, an exploratory waist scan, and a comparison of sequential
-second splits with ordinary splits.
+second splits with ordinary splits. It generates additional simulations using other initial
+seeds, rather than detecting divisions in the default dataset. The linked study explains
+the seeds, simulation setup and commands.
 
 ## 6. The push
 
@@ -442,7 +526,11 @@ second splits with ordinary splits.
 
 This section tests the causal question. Everything above describes what the SAE found; this asks
 whether any direction acts as a causal control on the model, and whether the resulting change is
-what the equations would produce.
+what the equations would produce. The script ranks directions on part of the validation
+dataset, then starts paired experiments from the test dataset. For the comparison with the
+equations it runs the simulator forward from those test states after adding the nudge. As noted
+in the summary, the reported results are for the previous four-block model; running the command
+with current checkpoints is a new experiment, not a reproduction of those numbers.
 
 ### 6.1 Which directions matter
 
