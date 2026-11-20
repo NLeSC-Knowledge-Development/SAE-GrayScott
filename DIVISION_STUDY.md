@@ -14,6 +14,7 @@ states and the SAE describes its internal activations.
 - [3. What happens at the waist?](#3-what-happens-at-the-waist)
 - [4. A second split: one parent, three descendants](#4-a-second-split-one-parent-three-descendants)
   - [Feature 213 just before the second split](#feature-213-just-before-the-second-split)
+- [5. Dumbbells: matched features and rare features](#5-dumbbells-matched-features-and-rare-features)
 - [Limitations](#limitations)
 
 ## What data do we use?
@@ -291,6 +292,119 @@ only 9 of 18. This is consistent with activity around splitting generally, not a
 specific to the second split. The sample is small, events within a seed are correlated,
 matching is approximate, and an association in emulator activations does not show that
 the feature causes a split.
+
+## 5. Dumbbells: matched features and rare features
+
+Some blobs look like two joined spots, or “dumbbells”. We ask two different questions:
+**do features behave differently in persistent versus splitting two-peak shapes**, and
+**is any feature active only in persistent examples**? The simulator provides the shapes;
+we pass their states through the existing emulator and SAE to measure the features.
+
+We use 12 additional initial-condition seeds: 217, 228, 235, 246, 251, 252, 279, 296,
+297, 304, 308 and 311. They were the first 12 seeds from 206 onward with at least one
+detected spot after warm-up. These are different trajectories from the earlier division
+studies, at the same simulator settings and recording stage described above.
+
+To reproduce the examples and both feature checks, first generate the default dataset and use
+the same emulator and SAE checkpoints described in section 4. Then run:
+
+```bash
+python block6_dumbbell_study.py --data data/gray_scott.npz --model-dir model \
+  --out results/dumbbell_study --threads 2
+```
+
+The script regenerates the 12 simulator trajectories, detects the shapes, and writes
+`dumbbell_examples.png`, `matched_features.csv`, `all_feature_specificity.csv` and
+`summary.json`. It does not retrain the emulator or SAE. Retraining can change feature numbers
+and results; the checkpoint hashes in section 4 identify the models used here.
+
+**How shapes are chosen:** every ten recorded states, we inspect each component with exactly
+two significant $v$ peaks. Components use the threshold and periodic tracking in section 1;
+peaks use prominence 0.03. A **persistent two-peak** candidate must remain one exclusive
+component and have exactly two detected peaks at every recorded state through the next seven
+states, or 700 simulator steps. A **split** candidate must form two exclusive descendants
+within that window, each tracked for two more states. A **changed** candidate stays one
+component for the whole window but does not have two peaks at every state.
+
+Among **378 sampled two-peak observations**, 5 were persistent, 275 split, 41 changed,
+54 had ambiguous splits and 3 were lost. These are observations, not necessarily different
+blobs. The detector is an approximation: two peaks need not form a visually clear dumbbell,
+and two peaks for 700 steps does not mean forever.
+
+For both checks we measure the **initial waist**: the lowest-$v$ cell on the connected line
+between the two peaks and its 3×3 neighbourhood, clipped to the component. We exclude
+observations without a valid waist. To obtain feature activations, we feed the initial state
+and its preceding state to the emulator and encode its block-6 activations with the SAE.
+
+### Matched persistent and splitting shapes
+
+We approximately deduplicate nearby observations and match splitting candidates to persistent
+ones **within a seed**, by area, elongation, peak brightness and peak separation. Area ratios
+must be at most 1.75, elongation and peak-separation ratios at most 1.5, and peak $v$
+differences at most 0.1. Matches prefer the same state but can be up to 30 recorded states
+apart; controls are not reused. We find five pairs from three seeds, of which only one pair
+is at the same time. Three pairs come from the same seed.
+
+![Matched two-peaked blobs](figures/blob_division/dumbbell_examples.png)
+
+Each pair has a persistent example and a splitting example; the rows are fixed patches. One
+recorded state is 100 simulator steps, and the column labels show which states are displayed.
+Cyan outlines the initial component. These are simulator states, not emulator rollouts.
+
+Feature **81** was selected earlier by comparing two-peak blobs that stayed connected with
+blobs that split, without requiring the connected blobs to stay two-peaked. Here we check it
+on the 12 additional seeds. We also screened all 512 features on these same five pairs:
+**495** and **307** had the largest and second-largest average differences in waist firing
+fraction. Unlike 81, they were selected on the pairs shown here, not before this comparison.
+
+| Feature | Persistent waist cells on, average | Splitting waist cells on, average | Persistent mean activation | Splitting mean activation |
+|---|---:|---:|---:|---:|
+| 81 | 82.2% | 53.3% | 1.154 | 0.636 |
+| 495 | 82.2% | 26.7% | 1.101 | 0.254 |
+| 307 | 68.9% | 26.7% | 0.666 | 0.173 |
+
+Each percentage is the fraction of cells active in a waist, averaged across the five pairs;
+mean activations include zeros. **Conclusion:** these features are stronger or more frequently
+on in the persistent waists on average, but they also fire in splitting waists. The
+five-pair sample, across-time matches and feature selection on the same pairs make this an
+exploratory association, not a feature uniquely identifying persistence. Individual pair
+values for these and the rare features below are in `matched_features.csv`.
+
+### Are any features exclusive to persistent examples?
+
+We separately scan **all 512 features**, including weak features, at the initial waists of
+all sampled two-peak shapes with a valid waist. A feature is considered on in an observation
+if at least one waist cell has positive activation. This comparison is **not matched** and
+includes ambiguous and lost tracks as other observations. We also inspect all other grid cells
+in the sampled states that contain at least one two-peak observation, excluding the persistent
+waist cells. These states can contain other parts of the same blob.
+
+There are five persistent observations and 363 other valid-waist observations: 266 split,
+41 changed, 54 ambiguous and two lost. **63 of 512 features** fire in at least one persistent
+waist. Every one of those 63 also fires in another sampled waist: **none is exclusive to
+persistent waists in this sample**.
+
+| Feature | Persistent waists on | Split waists on | Changed waists on | Ambiguous / lost waists on | Other grid cells on |
+|---|---:|---:|---:|---:|---:|
+| 81 | 5 / 5 | 252 / 266 | 40 / 41 | 52 / 56 | 99,343 / 737,235 |
+| 495 | 5 / 5 | 195 / 266 | 40 / 41 | 47 / 56 | 49,028 / 737,235 |
+| 307 | 5 / 5 | 211 / 266 | 36 / 41 | 43 / 56 | 18,537 / 737,235 |
+| 72 | 1 / 5 | 0 / 266 | 1 / 41 | 0 / 56 | 29,728 / 737,235 |
+| 427 | 1 / 5 | 3 / 266 | 2 / 41 | 2 / 56 | 774 / 737,235 |
+
+The last column counts individual cell observations across 180 sampled grids, not blobs.
+Feature 72 occurs in only one other sampled waist, but also elsewhere on the grid. Feature
+427 is rare across those grid cells, but fires in other waists too. Feature 495 is active in
+most splitting waists and almost all changed waists, despite standing out in the five matched
+pairs. **Conclusion:** neither the strongest matched candidates nor the rare features provide
+a persistent-dumbbell-only signature in these observations. The complete counts are in
+`all_feature_specificity.csv`.
+
+Both checks are exploratory: the five persistent observations come from three seeds, sampled
+observations and grid cells are correlated, and a feature may fire outside the sampled states.
+The screen measures only the chosen waist and detector-defined outcomes. No feature was
+removed from the emulator, so these results do not establish whether any feature affects
+splitting.
 
 ## Limitations
 

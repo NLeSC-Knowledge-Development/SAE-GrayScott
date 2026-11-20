@@ -512,9 +512,11 @@ dataset; the linked study gives the reproduction command.
 
 See the **[blob division study](DIVISION_STUDY.md)** for candidate division sequences,
 feature time courses, an exploratory waist scan, and a comparison of sequential
-second splits with ordinary splits. It generates additional simulations using other initial
-seeds, rather than detecting divisions in the default dataset. The linked study explains
-the seeds, simulation setup and commands.
+second splits with ordinary splits. It also studies two-peaked “dumbbells”: feature 81 and
+other candidates are compared in matched persistent and splitting shapes, and all 512
+features are checked for activity exclusive to the persistent examples. None was exclusive in
+the sampled waists. The study generates additional simulations rather than detecting these
+events in the default dataset; the linked document explains the data, limitations and commands.
 
 ## 6. The push
 
@@ -625,6 +627,7 @@ when pushed is the mechanism by which the model grows spots.
 | `block6_division_study.py` | simulate and detect candidate divisions and find matched controls |
 | `block6_clean_division_features.py`, `block6_waist_scan.py` | reproduce the feature time courses and waist comparisons in the [division study](DIVISION_STUDY.md) |
 | `block6_sequential_division.py` | reproduce sequential-split examples and the feature-213 triplet plot |
+| `block6_dumbbell_study.py` | reproduce two-peak examples, matched feature comparisons and the all-feature rarity screen |
 | `perturb.py` | ranks the directions, then pushes one at one cell and asks what followed, in the model and in the equations |
 | `make_fig1.py` | the system figure and the measurements that go with it: the pattern, the threshold map, and the two long-lived states |
 | `animate.py` | the moving pictures: the system running, each disc-shaped initial condition, the emulator's own rollout, and one push |
