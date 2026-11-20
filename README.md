@@ -429,7 +429,8 @@ quantities, with an explanation and a plot for each feature.
 ### 5.4 Blob division study
 
 See the **[blob division study](DIVISION_STUDY.md)** for candidate division sequences,
-feature time courses, and an exploratory scan of cells near the estimated waist.
+feature time courses, an exploratory waist scan, and a comparison of sequential
+second splits with ordinary splits.
 
 ## 6. The push
 
@@ -535,6 +536,7 @@ when pushed is the mechanism by which the model grows spots.
 | `feature_relationships.py` | feature maps and binned firing and strength plots for the [feature study](FEATURE_STUDY.md) |
 | `block6_division_study.py` | simulate and detect candidate divisions and find matched controls |
 | `block6_clean_division_features.py`, `block6_waist_scan.py` | reproduce the feature time courses and waist comparisons in the [division study](DIVISION_STUDY.md) |
+| `block6_sequential_division.py` | reproduce sequential-split examples and the feature-213 triplet plot |
 | `perturb.py` | ranks the directions, then pushes one at one cell and asks what followed, in the model and in the equations |
 | `make_fig1.py` | the system figure and the measurements that go with it: the pattern, the threshold map, and the two long-lived states |
 | `animate.py` | the moving pictures: the system running, each disc-shaped initial condition, the emulator's own rollout, and one push |

@@ -7,6 +7,16 @@ Gray-Scott simulations. The simulator supplies the states; the emulator processe
 states and the SAE describes its internal activations. These are not free-running emulator
 rollouts, and the measurements do not show that a feature causes division.
 
+## Contents
+
+- [What data do we use?](#what-data-do-we-use)
+- [1. Find candidate divisions](#1-find-candidate-divisions)
+- [2. Features across whole blobs](#2-features-across-whole-blobs)
+- [3. What happens at the waist?](#3-what-happens-at-the-waist)
+- [4. A second split: one parent, three descendants](#4-a-second-split-one-parent-three-descendants)
+  - [Feature 213 just before the second split](#feature-213-just-before-the-second-split)
+- [Limitations](#limitations)
+
 ## What data do we use?
 
 First generate the usual seed-0 dataset as in the
@@ -14,11 +24,12 @@ First generate the usual seed-0 dataset as in the
 training-set normalization for the model. The division events **do not come from that
 dataset's trajectory**.
 
-Instead, each study script runs six new, natural Gray-Scott simulations, using the same
+Instead, the scripts in sections 1–3 run six new, natural Gray-Scott simulations, using the same
 settings but initial-condition seeds 9, 14, 35, 39, 40 and 44. Each seed determines a
 different arrangement of initial spots. Reusing the same seed and settings regenerates
 the same trajectory; no divisions are injected. The simulations are recomputed by each
-script rather than stored as large trajectory files.
+script rather than stored as large trajectory files. Section 4 uses a separate set of
+12 survival-screened seeds, listed there.
 
 For these settings, each run advances through 2,000 warm-up steps and a further
 117,200 steps, then records 256 states 100 simulator steps apart. The additional advance
@@ -194,12 +205,99 @@ while rarely firing at the waist: these measure different regions.
 The complete 512-feature per-seed results, including event and active-cell counts, are in
 [per_seed_features.csv](figures/blob_division/per_seed_features.csv).
 
+## 4. A second split: one parent, three descendants
+
+We also look for a chain in which a blob splits into two and one daughter splits again.
+This is **not** a simultaneous three-way split. We use 12 different initial-condition seeds:
+110, 116, 124, 127, 132, 137, 140, 148, 165, 174, 199 and 205. They are the first 12
+survivors when seeds 101–205 are screened for at least one spot centre after warm-up.
+The seeds were used in earlier exploratory analyses, so this is not a blind test.
+
+To reproduce the figures, first make the default dataset if it is not already present:
+
+```bash
+python generate_data.py --out data
+```
+
+You also need the emulator and block-6 SAE checkpoints at `model/emulator.pt` and
+`model/sae.pt`. These checkpoints are git-ignored. The precise feature numbers and
+values below require the same checkpoints used here: their SHA-256 hashes are respectively
+`bf7b087d6fda4959c33d6f510744818b6677e8611165bf9035b3ac3435dea60d` and
+`dd4a223bd156b2d13e09a07176e6175899af624a3e504b70a554d666e377c850`.
+The [main README](README.md#3-the-emulator) describes training the emulator and SAE, but
+retraining can change the learned features and will not necessarily reproduce this plot.
+
+Then run:
+
+```bash
+python block6_sequential_division.py --data data/gray_scott.npz --model-dir model \
+  --out results/sequential_division --threads 2
+```
+
+One script regenerates all 12 natural simulations, detects and matches candidates, and
+writes both figures, `feature_213_triplets.csv` and per-seed counts in `summary.json`.
+No earlier division-study output is needed. It uses the same component threshold and
+dilated overlap as section 1. A parent has an exclusive one-component history for two
+states and splits into two at *t+1*. Its descendants must stay exclusive, without
+disappearing or merging, and number at most three through *t+7*. A **sequential** candidate
+has three descendants by *t+5* and still has three at *t+7*. A **two-descendant** candidate
+has two at *t+1* and through *t+7*. Events are deduplicated separately within each group
+using the same six-state, seven-cell rule as section 1.
+
+![Examples of sequential division candidates](figures/blob_division/sequential_division_examples.png)
+
+Each row shows one of the first four detected candidates from seed 116. The original
+parent is at *t*, with its peak marked by a fixed white `+`; cyan outlines show the
+tracked descendants from *t* onwards. Each step is 100 simulator steps.
+
+**What we see:** some shapes appear to split and then split again. The detector found
+47 sequential and 1,040 two-descendant candidates in the 12 seeds, and no simultaneous
+three-descendant candidates. Thus 47/1,087 (about 4.3%) are sequential **among these
+accepted two/three lineage candidates**. This is not a frequency among all blobs:
+events that cannot be tracked exclusively, split later, or fail the persistence rules
+are excluded. Thresholding and approximate links can also create false candidates.
+
+### Feature 213 just before the second split
+
+For each sequential candidate, locate the daughter that splits again and the sister that
+does not split at that time. At the same state, match a separate two-descendant candidate
+to the splitting daughter by area, elongation and peak *v*, using the matching limits in
+section 1. Other second-split daughters at that state cannot be controls, and a control
+is not reused at the same state. The control will split in the next recorded state and
+its two descendants persist through seven states; it may itself have a prior splitting
+history outside the detector's two-state history window.
+
+The script uses feature **213**, rather than repeating the exploratory feature selection.
+It was the highest-ranked feature in a previous all-512 screen of whole-blob *firing
+fractions* for 11 second-split-versus-sister pairs from discovery seeds 9 and 35. Feature
+213 had also already been examined in the ordinary-division study. The 12 seeds here
+were not used to select it for that comparison, but have been explored for other questions.
+
+![Feature 213 in matched second-split triplets](figures/blob_division/feature_213_triplets.png)
+
+The plot shows **18 matched triplets** from seven seeds; other sequential candidates
+had no eligible control. Each grey line joins three different blobs in the same snapshot:
+the sister, the daughter about to split, and the matched splitting control. At the state
+immediately **before** the second split—not on its products—we run the emulator on that
+state and the preceding state and encode its block-6 activations. Each point is feature
+213's **mean activation across all cells in that blob**, including zeros. The orange
+diamonds average these per-blob means over the 18 triplets; they are not percentages.
+
+**What we see:** the means are 0.079 for the sister, 0.376 for the splitting daughter,
+and 0.342 for the ordinary splitting control. Feature 213 is higher in the daughter
+than her sister in all 18 triplets, but higher than the ordinary splitting control in
+only 9 of 18. This is consistent with activity around splitting generally, not a feature
+specific to the second split. The sample is small, events within a seed are correlated,
+matching is approximate, and an association in emulator activations does not show that
+the feature causes a split.
+
 ## Limitations
 
-The six seeds are the first six of 12 survivors found when screening seeds 1–100 after
-warm-up. They were explored previously; evaluation seeds are separate from discovery seeds
-but are **not a fresh blind test**. Cells and events within a simulation are correlated.
-Three evaluation simulations are too few for reliable multiple-testing-corrected
-significance claims. The detector, threshold, peak and waist definitions influence which
-events are included. Results need not generalise to other parameters or trajectories,
-and matching does not isolate a causal division-specific signal.
+The six seeds in sections 1–3 are the first six of 12 survivors found when screening
+seeds 1–100 after warm-up. They were explored previously; evaluation seeds are separate
+from discovery seeds but are **not a fresh blind test**. Section 4 uses 12 other
+survival-screened seeds that were also previously explored. Cells and events within a
+simulation are correlated. These samples are too small for reliable
+multiple-testing-corrected significance claims. The detector, threshold, peak and waist
+definitions influence which events are included. Results need not generalise to other
+parameters or trajectories, and matching does not isolate a causal division-specific signal.
