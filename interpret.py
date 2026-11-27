@@ -248,17 +248,18 @@ def receptive_field_figure(offsets, sizes, radius, out_path, dpi=150):
                                     for offset in offsets], width=0.7)
     axis.axvspan(-radius - 0.5, radius + 0.5, color=INPUT_COLOUR, alpha=0.07)
     axis.set_xlabel("offset from the perturbed cell, cells")
-    axis.set_ylabel("how far the token moves")
+    axis.set_ylabel("norm of mean token difference")
     axis.set_title(f"the receptive field at this layer, measured against a prediction of "
                    f"{radius}", fontsize=10)
     axis.grid(axis="y", alpha=0.3)
-    axis.text(0.02, 0.96, f"the architecture predicts |offset| <= {radius} (shaded); outside it\n"
-                          f"the response is zero to machine precision",
+    outside = [size for offset, size in zip(offsets, sizes) if abs(offset) > radius]
+    outside_max = max(outside)
+    axis.text(0.02, 0.96, f"predicted radius: {radius} cells (shaded)\n"
+                          f"largest measured response outside: {outside_max:.2e}",
               transform=axis.transAxes, ha="left", va="top", fontsize=8.5, color="#444444")
     fig.text(0.5, 0.02,
-             "the fields are perturbed at one cell, and the token is read at every other cell. "
-             "whether the model uses all of the window the\narchitecture gives it is a different "
-             "question -- and the profile is the answer, not the cut-off.",
+             "The fields are perturbed at one cell; token differences are averaged across states.\n"
+             "The profile shows horizontal offsets along the row through the perturbed cell.",
              ha="center", va="bottom", fontsize=9, color="#444444")
     fig.tight_layout(rect=(0, 0.11, 1, 1))
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -327,7 +328,11 @@ def main():
     parser.add_argument("--figures", default="figures")
     parser.add_argument("--model-name", default="emulator")
     parser.add_argument("--states", type=int, default=234,
-                        help="validation states to measure over; they are never trained on")
+                        help="number of validation states to measure")
+    parser.add_argument("--state-start", type=int, default=0,
+                        help="first validation state to measure")
+    parser.add_argument("--receptive-field-only", action="store_true",
+                        help="make only the receptive-field plot")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--threads", type=int, default=4)
     args = parser.parse_args()
@@ -347,9 +352,12 @@ def main():
 
     # Held out from the SAE: tokens from the validation block.
     val = dataset["splits"]["val"]
-    states = val["inputs"][:args.states]
+    if args.state_start < 0 or args.states < 1 \
+            or args.state_start + args.states > len(val["inputs"]):
+        parser.error("requested validation states must fit within the validation block")
+    states = val["inputs"][args.state_start:args.state_start + args.states]
     physical = states[:, -1] * std[None, :, None, None] + mean[None, :, None, None]
-    next_physical = val["raw_targets"][:args.states]
+    next_physical = val["raw_targets"][args.state_start:args.state_start + args.states]
     radius = model.receptive_field_of(layer)
 
     # -------------------------------------------------- 1. the receptive field, measured
@@ -364,9 +372,19 @@ def main():
     h_down = token_activations(model, down, layer, batch_size=8)
     change = (h_up - h_down).reshape(len(states), n_sites, n_sites, -1).mean(dim=0)
     span = radius + MARGIN
+    if span >= n_sites / 2:
+        raise ValueError("receptive-field measurement offsets wrap around the periodic grid")
     offsets = list(range(-span, span + 1))
     sizes = [float(change[n_sites // 2, (n_sites // 2 + offset) % n_sites].norm())
              for offset in offsets]
+
+    if args.receptive_field_only:
+        out_path = Path(args.figures) / "receptive_field.png"
+        receptive_field_figure(offsets, sizes, radius, out_path)
+        outside = [size for offset, size in zip(offsets, sizes) if abs(offset) > radius]
+        print(f"layer {layer}: radius {radius}, maximum outside response {max(outside):.2e}")
+        print(f"wrote {out_path}")
+        return
 
     # -------------------------------------------------- 2. what each latent reads
     tokens = token_activations(model, states, layer, batch_size=8)

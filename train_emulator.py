@@ -12,9 +12,9 @@ neighbourhood a token can see grows by one block at a time, and the head turns t
 into the two fields.
 
 The blocks are **dilated**: the first one looks at its immediate neighbours, the next at cells
-two away, then four, then eight. Dilating instead of stacking is what makes a wide receptive
-field affordable -- four blocks cover fifteen cells, where fifteen blocks of plain 3x3 would
-have been needed. Where the field comes from is a *prediction* of the architecture, and
+two away, then four and eight, before decreasing through four, two and one. Dilating instead
+of stacking is what makes a wide receptive field affordable. Where the field comes from is a
+*prediction* of the architecture, and
 ``interpret.py`` measures it against the trained network.
 
 One call to the emulator advances the system by ``stride`` model steps -- 100 by default. It is
@@ -64,13 +64,13 @@ MIDDLE_COLOUR = "#c44e52"
 BASELINE_COLOUR = "#999999"
 PERSISTENCE_COLOUR = "#dd8452"
 
-DEFAULT_ARCHITECTURE = "32-32-32-32"
-DEFAULT_DILATIONS = "1,2,4,8"
+DEFAULT_ARCHITECTURE = "32-32-32-32-32-32-32"
+DEFAULT_DILATIONS = "1,2,4,8,4,2,1"
 DEFAULT_KERNEL_SIZE = 3
-# How many test states the free rollout is measured from.
+# How many states the free rollout is measured from.
 N_ROLLOUT_STARTS = 16
 # How many emulator calls the rollout runs for.
-N_ROLLOUT_CALLS = 25
+N_ROLLOUT_CALLS = 10
 
 
 # ------------------------------------------------------------------------------ the model
@@ -423,7 +423,7 @@ def architecture_figure(n, history, channels, widths, kernel_size, dilations, ra
 
     # --- the stack ---
     axis = axes[1]
-    axis.set_xlim(0, 13.4)
+    axis.set_xlim(0, 8.0 + 1.6 * len(widths))
     axis.set_ylim(0, 4.6)
     axis.set_axis_off()
     x = 0.35
@@ -456,10 +456,10 @@ def architecture_figure(n, history, channels, widths, kernel_size, dilations, ra
     axis.add_patch(Rectangle((x, 1.35), 0.74, 1.7, facecolor="#f4f4f4", edgecolor="#999999"))
     axis.text(x + 0.37, 2.2, "head", ha="center", va="center", fontsize=8.5)
     arrow(axis, x + 0.74, 2.2, x + 1.18, 2.2)
-    axis.add_patch(Rectangle((x + 1.18, 1.35), 1.05, 1.7, facecolor="#eef7ee",
+    axis.add_patch(Rectangle((x + 1.18, 1.35), 1.4, 1.7, facecolor="#eef7ee",
                              edgecolor="#55a868", linewidth=1.4))
-    axis.text(x + 1.70, 2.2, "next state\n(2 fields)", ha="center", va="center", fontsize=8.5)
-    axis.text(x + 1.70, 1.2, "what it must produce", ha="center", va="top", fontsize=8.5,
+    axis.text(x + 1.88, 2.2, "next state\n(2 fields)", ha="center", va="center", fontsize=8.5)
+    axis.text(x + 1.88, 1.2, "what it must produce", ha="center", va="top", fontsize=8.5,
               color="#55a868")
     axis.set_title("the emulator: one token per cell, wrapping at the edges", fontsize=10)
 
@@ -467,7 +467,7 @@ def architecture_figure(n, history, channels, widths, kernel_size, dilations, ra
              f"every convolution wraps around the grid, so the emulator treats the torus as a "
              f"torus and every cell alike. dilating the blocks is what makes the wide\n"
              f"receptive field affordable: the {len(widths)} blocks reach {radius} cells to "
-             f"either side; a prediction of the architecture, measured in interpret.py.",
+             f"either side.",
              ha="center", va="bottom", fontsize=9, color="#444444")
     fig.tight_layout(rect=(0, 0.10, 1, 1))
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -524,12 +524,12 @@ def skill_figure(metrics, mean, std, predicted, truth, out_path, dpi=150):
     fig, axes = plt.subplots(2, 2, figsize=(11.4, 8.0),
                              gridspec_kw={"height_ratios": (1.0, 1.0)})
 
-    axes[0, 0].plot(calls, rollout["rmse_standardised"], color=TRAIN_COLOUR, lw=1.9,
+    axes[0, 0].plot(calls[1:], rollout["rmse_standardised"][1:], color=TRAIN_COLOUR, lw=1.9,
                     label="the emulator")
     axes[0, 0].axhline(metrics["repeat_rmse"], color=PERSISTENCE_COLOUR, lw=1.5,
-                       linestyle="--", label="repeating the last input")
+                       linestyle="--", label="repeating the last input (one call)")
     axes[0, 0].axhline(metrics["average_rmse"], color=BASELINE_COLOUR, lw=1.5, linestyle=":",
-                       label="the average field")
+                       label="the average field (one call)")
     axes[0, 0].set_yscale("log")
     axes[0, 0].set_xlabel("emulator calls")
     axes[0, 0].set_ylabel("error in the fields, standardised")
@@ -551,17 +551,15 @@ def skill_figure(metrics, mean, std, predicted, truth, out_path, dpi=150):
     for axis, field, title in ((axes[1, 0], truth[last, 0, 1], "the true system"),
                                (axes[1, 1], predicted[last, 0, 1] * std[1] + mean[1],
                                 "the emulator")):
-        image = axis.imshow(field * std[1] + mean[1], cmap="inferno", vmin=0.0, vmax=0.4)
+        image = axis.imshow(field, cmap="inferno", vmin=0.0, vmax=0.4)
         axis.set_xticks([])
         axis.set_yticks([])
         axis.set_title(f"{title}, {last} calls later", fontsize=10)
         fig.colorbar(image, ax=axis, fraction=0.046, label="$v$", ticks=[0.0, 0.2, 0.4])
 
     fig.text(0.5, 0.02,
-             "after one call the error is a fraction of what the pattern moves; after "
-             "twenty-five calls the two fields are different patterns of spots with\n"
-             "the same statistics -- same coverage, same number of blobs. a chaotic pattern "
-             "can be imitated in character long after it can be imitated in detail.",
+             "The fields below show the first starting state; curves average over all starts. "
+             "Errors accumulate when the emulator feeds on its own predictions.",
              ha="center", va="bottom", fontsize=9, color="#444444")
     fig.tight_layout(rect=(0, 0.08, 1, 1))
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -583,12 +581,14 @@ def main():
     parser.add_argument("--dilations", default=DEFAULT_DILATIONS,
                         help="how far each block reaches, one per block, e.g. 1,2,4,8")
     parser.add_argument("--kernel-size", type=int, default=DEFAULT_KERNEL_SIZE)
-    parser.add_argument("--epochs", type=int, default=40)
+    parser.add_argument("--epochs", type=int, default=80)
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--weight-decay", type=float, default=0.0)
     parser.add_argument("--rollout-starts", type=int, default=N_ROLLOUT_STARTS)
     parser.add_argument("--rollout-calls", type=int, default=N_ROLLOUT_CALLS)
+    parser.add_argument("--evaluation-split", choices=("val", "test"), default="val",
+                        help="data split used for free-rollout starting states")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--threads", type=int, default=4)
     args = parser.parse_args()
@@ -597,6 +597,7 @@ def main():
     dataset = load_dataset(args.data)
     settings = dataset["settings"]
     mean, std = dataset["mean"], dataset["std"]
+    torch.manual_seed(args.seed)
     model = build_emulator(settings["N"], settings["history"], 2, args.architecture,
                            args.kernel_size, args.dilations)
     n_parameters = sum(parameter.numel() for parameter in model.parameters())
@@ -627,9 +628,11 @@ def main():
     }
 
     # --- what the emulator does when it is left to run ---
-    test_inputs = dataset["splits"]["test"]["inputs"]
-    stride = len(test_inputs) // args.rollout_starts
-    starts = test_inputs[::stride][:args.rollout_starts]
+    split_inputs = dataset["splits"][args.evaluation_split]["inputs"]
+    if not 1 <= args.rollout_starts <= len(split_inputs):
+        parser.error("--rollout-starts must be between 1 and the number of split states")
+    stride = len(split_inputs) // args.rollout_starts
+    starts = split_inputs[::stride][:args.rollout_starts]
     shape = (1, 1, 2, 1, 1)
     starts_physical = starts * std.reshape(shape) + mean.reshape(shape)
     predicted = free_rollout(model, starts, args.rollout_calls)
@@ -637,8 +640,9 @@ def main():
                           settings["F"], settings["k"], settings["dt"])
     rollout = rollout_metrics(predicted, truth, mean, std, args.rollout_calls)
     metrics["rollout"] = rollout
-    metrics["repeat_rmse"] = metrics["splits"]["test"]["repeat_rmse_standardised"]
-    metrics["average_rmse"] = metrics["splits"]["test"]["average_rmse_standardised"]
+    metrics["evaluation_split"] = args.evaluation_split
+    metrics["repeat_rmse"] = metrics["splits"][args.evaluation_split]["repeat_rmse_standardised"]
+    metrics["average_rmse"] = metrics["splits"][args.evaluation_split]["average_rmse_standardised"]
 
     model_dir = Path(args.model_dir)
     model_dir.mkdir(parents=True, exist_ok=True)

@@ -39,7 +39,7 @@ token from the first block sees one cell to either side and cannot know whether 
 blob.
 
 Writes ``<model-dir>/sae.pt``, ``sae_metrics.json`` and ``sae_history.json``, and
-``<figures>/sae.png`` and ``sae_training.png``.
+``<figures>/sae.png``, ``sae_training.png`` and ``sae_firing_rates.png``.
 """
 
 from __future__ import annotations
@@ -319,12 +319,12 @@ def training_figure(history, out_path, dpi=150):
     epochs = [entry["epoch"] for entry in history]
 
     axes[0].plot(epochs, [entry["train_loss"] for entry in history], color=TRAIN_COLOUR, lw=1.7,
-                 label="train")
+                 label="train (batch average)")
     axes[0].plot(epochs, [entry["val_loss"] for entry in history], color=VAL_COLOUR, lw=1.7,
                  label="validation")
     axes[0].set_yscale("log")
     axes[0].set_xlabel("epoch")
-    axes[0].set_ylabel("rebuild error")
+    axes[0].set_ylabel("mean squared reconstruction error")
     axes[0].set_title("how far the rebuild is off", fontsize=10)
     axes[0].legend(fontsize=8.5)
     axes[0].grid(alpha=0.3, which="both")
@@ -334,24 +334,38 @@ def training_figure(history, out_path, dpi=150):
     axes[1].plot(epochs, [entry["val_reconstruction"] for entry in history],
                  color=VAL_COLOUR, lw=1.7, label="validation")
     axes[1].set_xlabel("epoch")
-    axes[1].set_ylabel("how much of the token is rebuilt")
-    axes[1].set_ylim(0.0, 1.02)
-    axes[1].set_title("how much of the token comes back", fontsize=10)
+    axes[1].set_ylabel("reconstruction score")
+    axes[1].set_title("reconstruction relative to mean", fontsize=10)
     axes[1].legend(fontsize=8.5)
     axes[1].grid(alpha=0.3)
 
     axes[2].plot(epochs, [entry["never_on"] for entry in history], color=MIDDLE_COLOUR, lw=1.7)
     axes[2].set_xlabel("epoch")
-    axes[2].set_ylabel("directions that sat out")
-    axes[2].set_title("directions going unused", fontsize=10)
+    axes[2].set_ylabel("features not firing in training batches")
+    axes[2].set_title("inactive during epoch", fontsize=10)
     axes[2].grid(alpha=0.3)
 
     fig.text(0.5, 0.02,
-             "the SAE is shown one layer's activations and nothing else: not the grid, not the "
-             "equations, not the next state.\na direction that never fires is re-drawn at the "
-             "end of every epoch, which is why the right-hand panel comes down.",
+             "Training loss is averaged over batches during each epoch; reconstruction scores "
+             "are measured after the epoch.\nFeatures inactive during training are resampled "
+             "after each epoch except the last.",
              ha="center", va="bottom", fontsize=9, color="#444444")
     fig.tight_layout(rect=(0, 0.10, 1, 1))
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(out_path, dpi=dpi)
+    plt.close(fig)
+    return out_path
+
+
+def firing_rate_figure(firing_rates, layer, out_path, dpi=150):
+    """Plot each feature's fraction of active training tokens, sorted by frequency."""
+    rates = np.sort(np.asarray(firing_rates))[::-1]
+    fig, axis = plt.subplots(figsize=(7, 4.5))
+    axis.plot(np.arange(1, len(rates) + 1), rates, color=TRAIN_COLOUR)
+    axis.set(xlabel="feature rank (most to least active)",
+             ylabel="fraction of training tokens active", title=f"{layer}: feature activity")
+    axis.grid(alpha=0.3)
+    fig.tight_layout()
     out_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out_path, dpi=dpi)
     plt.close(fig)
@@ -445,6 +459,8 @@ def main():
     (model_dir / "sae_history.json").write_text(json.dumps(history, indent=2))
     sae_figure(n_input, args.n_latent, args.k, args.layer, Path(args.figures) / "sae.png")
     training_figure(history, Path(args.figures) / "sae_training.png")
+    firing_rate_figure(metrics["firing_rate"], args.layer,
+                       Path(args.figures) / "sae_firing_rates.png")
 
     # ---------------------------------------------------------------------- what we found
     print(f"trained the SAE for {args.epochs} epochs in {elapsed:.0f}s")
@@ -463,6 +479,7 @@ def main():
     print(f"wrote {model_dir / 'sae_metrics.json'}")
     print(f"wrote {Path(args.figures) / 'sae.png'}")
     print(f"wrote {Path(args.figures) / 'sae_training.png'}")
+    print(f"wrote {Path(args.figures) / 'sae_firing_rates.png'}")
 
 
 if __name__ == "__main__":
