@@ -1,0 +1,25 @@
+
+harvesting components at blocks.6 and probes at ['blocks.4', 'blocks.5', 'blocks.6']
+  discovery  regime 0:  5508 components {'stick': 62, 'round': 4965, 'labyrinth': 0, 'other': 481}
+  discovery  regime 1:  1026 components {'stick': 540, 'round': 486, 'labyrinth': 0, 'other': 0}
+  evaluation regime 0:  5556 components {'stick': 83, 'round': 4871, 'labyrinth': 0, 'other': 602}
+  evaluation regime 1:  1007 components {'stick': 530, 'round': 477, 'labyrinth': 0, 'other': 0}
+
+primary contrast (stick regime): 486 stick vs 486 matched round components
+  selected positive direction 159: AUROC 1.000 discovery, 1.000 test
+  permutation p (max over 512 directions): 0.0010; null 95th percentile 0.555
+  bootstrap 95% CI: 1.000-1.000
+  round direction 74: 1-AUROC 1.000 discovery, 1.000 test
+  signed direction 74 (sign -1)
+  matched non-shape control 473: AUROC 0.500
+
+secondary contrast (blob regime): 62 stick vs 62 matched round components
+  primary direction 159: AUROC 1.000 discovery, 0.534 test
+
+probe (continuous R2 / binary AUROC):
+  blocks.4   0.981 / 1.000
+  blocks.5   0.983 / 1.000
+  blocks.6   0.983 / 1.000
+
+wrote model/stick_components.json
+wrote figures/stick_components.png

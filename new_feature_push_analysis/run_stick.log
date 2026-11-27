@@ -1,0 +1,16 @@
+
+layer 'blocks.6', 3469 stick cells against 39878 round cells
+  stick feature 297: discovery AUROC 0.546, evaluation 0.523; elongation correlation -0.017
+  round feature 149: discovery AUROC 0.592, evaluation 0.580
+
+injection in the main regime, 24 pairs, 3 sites per pair, 20 calls
+  condition                           new blob  stick near  RMS change cov delta stick delta  truth blob
+  stick direction, stick shape             17%          8%      0.7055   -0.0015     -0.0024          8%
+  blob direction, stick shape              17%          0%      0.6217    0.0017     -0.0021         12%
+  random direction, stick shape            21%          0%      0.5646    0.0050     -0.0038         12%
+  stick direction, disc shape              33%          0%      0.7969    0.0042     -0.0023          8%
+
+wrote model/stick.json
+wrote figures/stick_features.png
+wrote figures/stick_injection.png
+wrote figures/stick_outcomes.png

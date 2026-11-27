@@ -1,0 +1,29 @@
+
+layer 'blocks.6', 54 states from the validation block, which the SAE never saw
+
+1. the receptive field, measured (the architecture predicts 22 cells)
+     offset     -26    -25    -24    -23    -22    -21    -20    -19    -18    -17    -16    -15    -14    -13    -12    -11    -10     -9     -8     -7     -6     -5     -4     -3     -2     -1      0      1      2      3      4      5      6      7      8      9     10     11     12     13     14     15     16     17     18     19     20     21     22     23     24     25     26
+     moves    0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.002  0.001  0.003  0.003  0.036  0.009  0.014  0.042  0.193  0.071  0.069  0.093  0.850  0.153  0.423  0.806  4.177  1.048  0.551  0.189  0.830  0.116  0.108  0.048  0.268  0.073  0.022  0.007  0.034  0.007  0.003  0.001  0.005  0.001  0.001  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000
+  inside the window the token moves by 0.228 on average; outside it, at most 0.00e+00
+
+2. what each latent reads, one number per cell, paired with that cell's token:
+                                              latent  which     512   layer
+    the field u                                0.926    398   0.998   0.998
+    the field v                                0.920    398   0.999   0.998
+    the reaction term u*v^2                    0.892    398   0.998   0.995
+    what v is doing right now                  0.680    398   0.987   0.962
+    the curvature of v                         0.680    398   0.987   0.962
+    how much spot is around here               0.179    308   0.881   0.900
+    how far the nearest blob is                0.806    398   0.864   0.853
+    the elongation of the component here       0.522    488   0.807   0.688
+    inside an elongated component              0.495    488   0.808   0.673
+    stick share of the patch (elongation >= 3)   0.078     82   0.599   0.493
+    what v will do next                        0.514     93   0.932   0.900
+    the grid's average (control)              -8.869     90 -19.310 -19.344
+
+3. the two events, scored by AUROC (0.5 is a coin toss):
+                                              latent  spot now how often
+
+wrote model/interpret_sticks.json
+wrote figures/receptive_field_sticks.png
+wrote figures/features_sticks.png

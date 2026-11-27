@@ -1,0 +1,110 @@
+
+32-32-32-32-32-32-32 with dilations 1,2,4,8,4,2,1, kernel 3: 72930 parameters
+  token at each cell, receptive field 22 cells to either side
+  one call advances the system by 100 steps
+
+  epoch   1/80: train 0.11128  val 0.08694  <- best
+  epoch   2/80: train 0.05236  val 0.03058  <- best
+  epoch   3/80: train 0.03114  val 0.02792  <- best
+  epoch   4/80: train 0.01908  val 0.01855  <- best
+  epoch   5/80: train 0.01393  val 0.01208  <- best
+  epoch   6/80: train 0.01165  val 0.00921  <- best
+  epoch   7/80: train 0.01014  val 0.00793  <- best
+  epoch   8/80: train 0.00952  val 0.00587  <- best
+  epoch   9/80: train 0.00955  val 0.00997
+  epoch  10/80: train 0.00589  val 0.00635
+  epoch  11/80: train 0.00675  val 0.00454  <- best
+  epoch  12/80: train 0.00641  val 0.01287
+  epoch  13/80: train 0.00526  val 0.00514
+  epoch  14/80: train 0.00833  val 0.00412  <- best
+  epoch  15/80: train 0.00820  val 0.00482
+  epoch  16/80: train 0.00411  val 0.00578
+  epoch  17/80: train 0.00393  val 0.00330  <- best
+  epoch  18/80: train 0.00379  val 0.00275  <- best
+  epoch  19/80: train 0.00314  val 0.00349
+  epoch  20/80: train 0.00356  val 0.00316
+  epoch  21/80: train 0.00245  val 0.00226  <- best
+  epoch  22/80: train 0.00226  val 0.00200  <- best
+  epoch  23/80: train 0.00161  val 0.00181  <- best
+  epoch  24/80: train 0.00506  val 0.00510
+  epoch  25/80: train 0.00289  val 0.00330
+  epoch  26/80: train 0.00306  val 0.00725
+  epoch  27/80: train 0.00449  val 0.00759
+  epoch  28/80: train 0.00242  val 0.00170  <- best
+  epoch  29/80: train 0.00134  val 0.00182
+  epoch  30/80: train 0.00141  val 0.00147  <- best
+  epoch  31/80: train 0.00115  val 0.00135  <- best
+  epoch  32/80: train 0.00107  val 0.00135  <- best
+  epoch  33/80: train 0.00095  val 0.00109  <- best
+  epoch  34/80: train 0.00182  val 0.00572
+  epoch  35/80: train 0.00142  val 0.00132
+  epoch  36/80: train 0.00093  val 0.00181
+  epoch  37/80: train 0.00145  val 0.00119
+  epoch  38/80: train 0.00091  val 0.00108  <- best
+  epoch  39/80: train 0.00084  val 0.00114
+  epoch  40/80: train 0.00076  val 0.00109
+  epoch  41/80: train 0.00075  val 0.00216
+  epoch  42/80: train 0.00136  val 0.00099  <- best
+  epoch  43/80: train 0.00087  val 0.00091  <- best
+  epoch  44/80: train 0.00064  val 0.00087  <- best
+  epoch  45/80: train 0.00070  val 0.00084  <- best
+  epoch  46/80: train 0.00071  val 0.00437
+  epoch  47/80: train 0.00168  val 0.00289
+  epoch  48/80: train 0.00159  val 0.00110
+  epoch  49/80: train 0.00063  val 0.00078  <- best
+  epoch  50/80: train 0.00057  val 0.00088
+  epoch  51/80: train 0.00056  val 0.00072  <- best
+  epoch  52/80: train 0.00053  val 0.00071  <- best
+  epoch  53/80: train 0.00053  val 0.00072
+  epoch  54/80: train 0.00050  val 0.00077
+  epoch  55/80: train 0.00051  val 0.00070  <- best
+  epoch  56/80: train 0.00047  val 0.00062  <- best
+  epoch  57/80: train 0.00048  val 0.00065
+  epoch  58/80: train 0.00047  val 0.00068
+  epoch  59/80: train 0.00046  val 0.00074
+  epoch  60/80: train 0.00045  val 0.00062  <- best
+  epoch  61/80: train 0.00044  val 0.00063
+  epoch  62/80: train 0.00043  val 0.00059  <- best
+  epoch  63/80: train 0.00043  val 0.00064
+  epoch  64/80: train 0.00042  val 0.00060
+  epoch  65/80: train 0.00042  val 0.00063
+  epoch  66/80: train 0.00041  val 0.00061
+  epoch  67/80: train 0.00040  val 0.00062
+  epoch  68/80: train 0.00040  val 0.00060
+  epoch  69/80: train 0.00040  val 0.00059  <- best
+  epoch  70/80: train 0.00040  val 0.00061
+  epoch  71/80: train 0.00039  val 0.00056  <- best
+  epoch  72/80: train 0.00039  val 0.00058
+  epoch  73/80: train 0.00039  val 0.00059
+  epoch  74/80: train 0.00038  val 0.00058
+  epoch  75/80: train 0.00038  val 0.00060
+  epoch  76/80: train 0.00038  val 0.00058
+  epoch  77/80: train 0.00038  val 0.00058
+  epoch  78/80: train 0.00038  val 0.00059
+  epoch  79/80: train 0.00038  val 0.00058
+  epoch  80/80: train 0.00038  val 0.00058
+
+trained for 80 epochs in 3795s, kept epoch 71
+
+
+  split       regime        RMSE  physical   repeat  average
+  train       both        0.0198    0.0028   0.4585   1.0001
+  val         both        0.0238    0.0034   0.4872   1.0065
+  test        both        0.0329    0.0048   0.4942   1.0048
+  train       blob        0.0213    0.0031   0.5086   0.9963
+  train       sticks      0.0109    0.0015   0.0113   0.9943
+  val         blob        0.0260    0.0037   0.5405   1.0048
+  val         sticks      0.0094    0.0013   0.0030   0.9875
+  test        blob        0.0362    0.0052   0.5476   1.0029
+  test        sticks      0.0094    0.0013   0.0028   0.9874
+
+  left to run on its own, in the fields' own units:
+    after  1 calls: RMSE 0.0209 (physical 0.0030), coverage emulator 0.178 against 0.178 in the true system, blobs 43 against 43
+    after  5 calls: RMSE 0.0912 (physical 0.0132), coverage emulator 0.167 against 0.169 in the true system, blobs 38 against 39
+    after 10 calls: RMSE 0.4275 (physical 0.0637), coverage emulator 0.174 against 0.172 in the true system, blobs 41 against 41
+
+wrote model/emulator.pt
+wrote model/metrics.json
+wrote figures/architecture.png
+wrote figures/training.png
+wrote figures/skill.png

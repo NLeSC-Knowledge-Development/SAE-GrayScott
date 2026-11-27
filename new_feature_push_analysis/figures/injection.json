@@ -1,0 +1,20 @@
+{
+  "gif": "injection.gif",
+  "chosen_by": "the largest final near-site stick share out of 12 candidate states (state 3: 39% with the push, 0% without)",
+  "chosen_state": 3,
+  "sites": [
+    [
+      45,
+      38
+    ],
+    [
+      26,
+      2
+    ],
+    [
+      45,
+      55
+    ]
+  ],
+  "calls": 20
+}

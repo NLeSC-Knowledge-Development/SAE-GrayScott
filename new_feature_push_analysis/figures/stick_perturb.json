@@ -1,0 +1,12 @@
+{
+  "gif": "stick_perturb.gif",
+  "row": 53,
+  "col": 7,
+  "warm_up_steps": 10000,
+  "animated_steps": 1200,
+  "steps_per_frame": 60,
+  "frames": 21,
+  "fps": 6,
+  "control_final_max_elongation": 1.0649972567471393,
+  "pushed_final_max_elongation": 1.232980333803701
+}

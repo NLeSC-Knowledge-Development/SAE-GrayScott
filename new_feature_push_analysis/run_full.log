@@ -1,0 +1,169 @@
+=== START Mon Nov 23 01:21:43 PM CET 2026 ===
+
+integrating 2 regimes of 64 x 64 cells: main 1600 states, stick 400 states, 100 steps each ...
+  one emulator call advances the system by 100 steps
+
+  split          pairs    main  sticks    shape of one input
+  train           1344    1092     252           (2, 64, 64)
+  val              288     234      54           (2, 64, 64)
+  test             286     233      53           (2, 64, 64)
+
+  the patterns the dataset was drawn from:
+    main    F=0.026 k=0.059: coverage 0.118, 24 components, elongation median 1.11 / max 1.45, stick cells 0.00
+    sticks  F=0.030 k=0.059: coverage 0.269, 3 components, elongation median 1.11 / max 1.47, stick cells 0.00
+
+  standardisation: u +0.615 +- 0.172, v +0.120 +- 0.108
+
+wrote data/gray_scott_mixed.npz
+=== DATA DONE Mon Nov 23 01:22:24 PM CET 2026 ===
+
+64 x 64 cells, 8000 steps, 25 seeds, Du = 0.16, Dv = 0.08, dt = 1.0
+
+        F       k  coverage  comps  elong med  elong max  stick cell  half-life   what happened
+   0.0140  0.0450     0.000      0       0.00       0.00        0.00         60   decayed
+   0.0140  0.0520     0.000      0       0.00       0.00        0.00         60   decayed
+   0.0140  0.0590     0.000      0       0.00       0.00        0.00         60   decayed
+   0.0140  0.0660     0.000      0       0.00       0.00        0.00         60   decayed
+   0.0220  0.0450     0.000      0       0.00       0.00        0.00         40   decayed
+   0.0220  0.0520     0.000      0       0.00       0.00        0.00         60   decayed
+   0.0220  0.0590     0.104     19       1.22       2.35        0.00        360   multiplying
+   0.0220  0.0660     0.000      0       0.00       0.00        0.00         60   decayed
+   0.0300  0.0450     1.000      1       1.00       1.00        0.00         40   filled
+   0.0300  0.0520     0.000      0       0.00       0.00        0.00         40   decayed
+   0.0300  0.0590     0.265      5       5.50       7.91        0.34        700   sticks
+   0.0300  0.0660     0.000      0       0.00       0.00        0.00         80   decayed
+   0.0380  0.0450     1.000      1       1.00       1.00        0.00         40   filled
+   0.0380  0.0520     1.000      1       1.00       1.00        0.00         40   filled
+   0.0380  0.0590     0.433      1       1.00       1.00        0.00        660   changing
+   0.0380  0.0660     0.150     23       1.08       1.19        0.00        900   changing
+   0.0460  0.0450     1.000      1       1.00       1.00        0.00         40   filled
+   0.0460  0.0520     1.000      1       1.00       1.00        0.00         40   filled
+   0.0460  0.0590     1.000      1       1.00       1.00        0.00         80   filled
+   0.0460  0.0660     0.183     25       1.08       1.19        0.00        760   changing
+   0.0540  0.0450     1.000      1       1.00       1.00        0.00         40   filled
+   0.0540  0.0520     1.000      1       1.00       1.00        0.00         60   filled
+   0.0540  0.0590     1.000      1       1.00       1.00        0.00         80   filled
+   0.0540  0.0660     0.000      0       0.00       0.00        0.00         40   decayed
+
+wrote figures/regimes.png
+wrote figures/regimes.json
+=== EXPLORE DONE Mon Nov 23 01:23:11 PM CET 2026 ===
+integrating main: F=0.026, k=0.059
+  coverage 0.119, 24 components, elongation median 1.22 / max 1.52, stick cells 0.00
+integrating sticks: F=0.03, k=0.059
+  coverage 0.270, 4 components, elongation median 1.26 / max 3.82, stick cells 0.15
+
+wrote figures/regimes_two.png
+wrote model/system.json
+=== FIG1 DONE Mon Nov 23 01:23:19 PM CET 2026 ===
+
+32-32-32-32-32-32-32 with dilations 1,2,4,8,4,2,1, kernel 3: 72930 parameters
+  token at each cell, receptive field 22 cells to either side
+  one call advances the system by 100 steps
+
+  epoch   1/80: train 0.11618  val 0.09067  <- best
+  epoch   2/80: train 0.05625  val 0.03585  <- best
+  epoch   3/80: train 0.02804  val 0.02639  <- best
+  epoch   4/80: train 0.02288  val 0.01595  <- best
+  epoch   5/80: train 0.01367  val 0.00955  <- best
+  epoch   6/80: train 0.01215  val 0.00947  <- best
+  epoch   7/80: train 0.00925  val 0.00710  <- best
+  epoch   8/80: train 0.00820  val 0.01043
+  epoch   9/80: train 0.00872  val 0.00782
+  epoch  10/80: train 0.00631  val 0.00556  <- best
+  epoch  11/80: train 0.00874  val 0.00546  <- best
+  epoch  12/80: train 0.00552  val 0.00516  <- best
+  epoch  13/80: train 0.00423  val 0.00377  <- best
+  epoch  14/80: train 0.00503  val 0.00589
+  epoch  15/80: train 0.00813  val 0.00458
+  epoch  16/80: train 0.00359  val 0.00513
+  epoch  17/80: train 0.00486  val 0.00401
+  epoch  18/80: train 0.00434  val 0.00328  <- best
+  epoch  19/80: train 0.00254  val 0.00452
+  epoch  20/80: train 0.00407  val 0.00283  <- best
+  epoch  21/80: train 0.00324  val 0.00243  <- best
+  epoch  22/80: train 0.00256  val 0.00202  <- best
+  epoch  23/80: train 0.00155  val 0.00176  <- best
+  epoch  24/80: train 0.00332  val 0.00502
+  epoch  25/80: train 0.00284  val 0.00224
+  epoch  26/80: train 0.00161  val 0.00484
+  epoch  27/80: train 0.00174  val 0.00222
+  epoch  28/80: train 0.00150  val 0.00278
+  epoch  29/80: train 0.00626  val 0.00500
+  epoch  30/80: train 0.00222  val 0.00518
+  epoch  31/80: train 0.00382  val 0.00167  <- best
+  epoch  32/80: train 0.00131  val 0.00166  <- best
+  epoch  33/80: train 0.00629  val 0.01788
+  epoch  34/80: train 0.00473  val 0.00190
+  epoch  35/80: train 0.00121  val 0.00142  <- best
+  epoch  36/80: train 0.00105  val 0.00178
+  epoch  37/80: train 0.00163  val 0.00170
+  epoch  38/80: train 0.00115  val 0.00142  <- best
+  epoch  39/80: train 0.00103  val 0.00138  <- best
+  epoch  40/80: train 0.00083  val 0.00115  <- best
+  epoch  41/80: train 0.00077  val 0.00123
+  epoch  42/80: train 0.00077  val 0.00132
+  epoch  43/80: train 0.00087  val 0.00105  <- best
+  epoch  44/80: train 0.00070  val 0.00104  <- best
+  epoch  45/80: train 0.00065  val 0.00090  <- best
+  epoch  46/80: train 0.00067  val 0.00108
+  epoch  47/80: train 0.00073  val 0.00087  <- best
+  epoch  48/80: train 0.00064  val 0.00090
+  epoch  49/80: train 0.00061  val 0.00089
+  epoch  50/80: train 0.00059  val 0.00106
+  epoch  51/80: train 0.00059  val 0.00075  <- best
+  epoch  52/80: train 0.00054  val 0.00077
+  epoch  53/80: train 0.00052  val 0.00082
+  epoch  54/80: train 0.00052  val 0.00080
+  epoch  55/80: train 0.00049  val 0.00078
+  epoch  56/80: train 0.00048  val 0.00071  <- best
+  epoch  57/80: train 0.00048  val 0.00072
+  epoch  58/80: train 0.00046  val 0.00073
+  epoch  59/80: train 0.00047  val 0.00081
+  epoch  60/80: train 0.00045  val 0.00070  <- best
+  epoch  61/80: train 0.00044  val 0.00070
+  epoch  62/80: train 0.00044  val 0.00067  <- best
+  epoch  63/80: train 0.00043  val 0.00073
+  epoch  64/80: train 0.00043  val 0.00066  <- best
+  epoch  65/80: train 0.00042  val 0.00070
+  epoch  66/80: train 0.00041  val 0.00067
+  epoch  67/80: train 0.00041  val 0.00068
+  epoch  68/80: train 0.00040  val 0.00066
+  epoch  69/80: train 0.00040  val 0.00062  <- best
+  epoch  70/80: train 0.00039  val 0.00065
+  epoch  71/80: train 0.00039  val 0.00062  <- best
+  epoch  72/80: train 0.00039  val 0.00064
+  epoch  73/80: train 0.00039  val 0.00064
+  epoch  74/80: train 0.00038  val 0.00063
+  epoch  75/80: train 0.00038  val 0.00064
+  epoch  76/80: train 0.00038  val 0.00063
+  epoch  77/80: train 0.00038  val 0.00063
+  epoch  78/80: train 0.00038  val 0.00064
+  epoch  79/80: train 0.00038  val 0.00063
+  epoch  80/80: train 0.00038  val 0.00063
+
+trained for 80 epochs in 3797s, kept epoch 71
+
+
+  split       regime        RMSE  physical   repeat  average
+  train       both        0.0197    0.0028   0.4613   1.0001
+  val         both        0.0249    0.0035   0.4904   1.0078
+  test        both        0.0384    0.0055   0.4981   1.0060
+  train       main        0.0213    0.0030   0.5116   1.0035
+  train       sticks      0.0108    0.0015   0.0215   0.9155
+  val         main        0.0262    0.0037   0.5436   1.0119
+  val         sticks      0.0183    0.0027   0.0465   0.9104
+  test        main        0.0403    0.0057   0.5508   1.0100
+  test        sticks      0.0281    0.0042   0.0723   0.9103
+
+  left to run on its own, in the fields' own units:
+    after  1 calls: RMSE 0.0208 (physical 0.0030), coverage emulator 0.178 against 0.178 in the true system, blobs 43 against 43
+    after  5 calls: RMSE 0.1359 (physical 0.0196), coverage emulator 0.167 against 0.169 in the true system, blobs 39 against 39
+    after 10 calls: RMSE 0.4706 (physical 0.0708), coverage emulator 0.173 against 0.172 in the true system, blobs 42 against 41
+
+wrote model/emulator.pt
+wrote model/metrics.json
+wrote figures/architecture.png
+wrote figures/training.png
+wrote figures/skill.png
+/home/simone/Dropbox/eScience_projects/Mechanistic-Interpretability/internal_projects/project_5/run_full.sh: line 21: tions: command not found

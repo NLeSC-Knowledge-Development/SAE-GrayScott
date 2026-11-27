@@ -1,0 +1,27 @@
+/home/simone/Dropbox/eScience_projects/Mechanistic-Interpretability/.venv/lib/python3.12/site-packages/numpy/lib/_function_base_impl.py:3036: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[:, None]
+/home/simone/Dropbox/eScience_projects/Mechanistic-Interpretability/.venv/lib/python3.12/site-packages/numpy/lib/_function_base_impl.py:3037: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[None, :]
+
+harvesting components at blocks.6 and probes at ['blocks.6']
+  discovery  regime 0:   948 components {'stick': 10, 'round': 853, 'labyrinth': 0, 'other': 85}
+  discovery  regime 1:   168 components {'stick': 48, 'round': 0, 'labyrinth': 120, 'other': 0}
+  evaluation regime 0:   953 components {'stick': 18, 'round': 854, 'labyrinth': 0, 'other': 81}
+  evaluation regime 1:   175 components {'stick': 55, 'round': 0, 'labyrinth': 120, 'other': 0}
+
+primary contrast (main regime): 10 stick vs 10 matched round components
+  selected positive direction 233: AUROC 0.920 discovery, 0.836 test
+  permutation p (max over 512 directions): 0.0476; null 95th percentile 0.823
+  bootstrap 95% CI: 0.763-1.000
+  round direction 246: 1-AUROC 1.000 discovery, 0.881 test
+  signed direction 246 (sign -1)
+  matched non-shape control 36: AUROC 0.500
+
+secondary contrast (stick regime): 48 stick vs 48 matched labyrinth components
+  primary direction 233: AUROC 0.920 discovery, 1.000 test
+
+probe (continuous R2 / binary AUROC):
+  blocks.6   0.341 / 1.000
+
+wrote model/stick_components.json
+wrote figures/stick_components.png

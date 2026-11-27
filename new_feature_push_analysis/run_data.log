@@ -1,0 +1,16 @@
+
+integrating 2 regimes of 64 x 64 cells: main 1600 states, stick 400 states, 100 steps each ...
+  one emulator call advances the system by 100 steps
+
+  split          pairs    main  sticks    shape of one input
+  train           1344    1092     252           (2, 64, 64)
+  val              288     234      54           (2, 64, 64)
+  test             286     233      53           (2, 64, 64)
+
+  the patterns the dataset was drawn from, median over 20 sampled states:
+    blob    F=0.026 k=0.059: coverage 0.171, 24 components, elongation median 1.19 / max 2.62, stick cells 0.06, states with a stick 40%
+    sticks  F=0.036 k=0.062: coverage 0.255, 19 components, elongation median 4.02 / max 8.87, stick cells 0.74, states with a stick 100%
+
+  standardisation: u +0.625 +- 0.172, v +0.119 +- 0.110
+
+wrote data/gray_scott_mixed.npz

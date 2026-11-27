@@ -1,5 +1,9 @@
 # SAE for a Gray-Scott emulator
 
+> **New analysis — [Learning a stick feature and using it in Gray-Scott](new_feature_analysis.md).**
+> A follow-up study of the stick feature: how it is measured, how it is pushed through the SAE,
+> and how matched `v` controls compare.
+
 ## Contents
 
 - [Summary](#summary)

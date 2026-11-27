@@ -1,0 +1,21 @@
+{
+  "gif": "v_injection.gif",
+  "control": "footprint",
+  "chosen_by": "the largest final near-site stick share out of 12 candidate states (state 4: 41% with the footprint v addition, 0% without)",
+  "chosen_state": 4,
+  "sites": [
+    [
+      36,
+      37
+    ],
+    [
+      24,
+      51
+    ],
+    [
+      54,
+      33
+    ]
+  ],
+  "calls": 20
+}

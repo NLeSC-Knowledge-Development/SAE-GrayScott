@@ -1,0 +1,6 @@
+=== START REST Wed Nov 25 08:57:43 AM CET 2026 ===
+
+layer 'blocks.6': 32 numbers per token, a window of 45 by 45 cells
+  1228800 training tokens from 300 states, 245760 held out
+  the token needs 8 directions for 95% of its variance, 19 for 99%, out of 32
+

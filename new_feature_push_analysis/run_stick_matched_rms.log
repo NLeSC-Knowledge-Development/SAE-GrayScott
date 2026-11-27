@@ -1,0 +1,38 @@
+
+selection: component
+  component direction 159: main-regime stick-vs-round AUROC 1.000 discovery, 1.000 test; permutation p 0.0010
+  matched non-shape direction 473; signed direction 74 x -1
+
+injection in the blob regime, 24 pairs, 3 sites, 20 calls
+  condition                           new blob  stick near  RMS change      dE   d stick
+  stick direction, stick shape              8%          0%      0.4341   0.227    0.0012
+  blob direction, stick shape              29%          0%      0.7683   0.446    0.0030
+  non-shape direction, stick shape         12%          0%      0.4699   0.438    0.0004
+  signed round direction, stick shape       29%          0%      0.7050   0.549   -0.0013
+  probe direction, stick shape             25%          4%      0.8072   0.522    0.0015
+  random direction, stick shape             4%          0%      0.5313   0.298    0.0010
+  stick direction, disc shape              12%          0%      0.4861   0.218    0.0016
+  random directions: new blob 0%, ΔE +0.118
+
+stick-regime intervention:
+  ablate stick feature           ΔE -0.066 [-0.066, -0.066], ΔmaxE -0.066 [-0.066, -0.066], Δstick +0.0007
+  boost stick feature            ΔE -0.127 [-0.127, -0.127], ΔmaxE -0.127 [-0.127, -0.127], Δstick +0.0000
+  ablate non-shape direction     ΔE -0.127 [-0.127, -0.127], ΔmaxE -0.127 [-0.127, -0.127], Δstick +0.0000
+  boost signed round feature     ΔE -0.066 [-0.066, -0.066], ΔmaxE -0.066 [-0.066, -0.066], Δstick +0.0002
+  physical erase component       ΔE -6.416 [-6.416, -6.416], ΔmaxE -1.389 [-1.389, -1.389], Δstick -0.0808
+
+equation twin on 1 blank sites (new blob rate by peak |Δv|):
+  stick direction, stick shape      0.05: 100%
+  blob direction, stick shape       0.05: 100%
+  non-shape direction, stick shape  0.05: 100%
+  signed round direction, stick shape0.05: 100%
+  probe direction, stick shape      0.05: 100%
+  random direction, stick shape     0.05: 100%
+  stick direction, disc shape       0.05: 100%
+  direct physical stick: 0.05: 100%
+
+wrote model/stick_matched_rms.json
+wrote figures/stick_injection_stick_matched_rms.png
+wrote figures/stick_outcomes_stick_matched_rms.png
+wrote figures/stick_shape_outcomes_stick_matched_rms.png
+wrote figures/stick_twin_stick_matched_rms.png

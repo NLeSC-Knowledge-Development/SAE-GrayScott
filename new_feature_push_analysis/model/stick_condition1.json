@@ -1,0 +1,58 @@
+{
+  "layer": "blocks.6",
+  "blob_regime": 0,
+  "stick_regime": 1,
+  "regime_names": [
+    "blob",
+    "sticks"
+  ],
+  "evaluation_split": "test",
+  "condition": "stick direction, stick shape",
+  "selected_feature": 159,
+  "n_pairs": 120,
+  "n_sites": 3,
+  "n_calls": 20,
+  "push_fraction": 0.25,
+  "outcomes": {
+    "change_rms": 0.556025222580259,
+    "change_rms_ci": [
+      0.4929208420422704,
+      0.6212676801776978
+    ],
+    "coverage_change": 0.00016886393229166666,
+    "coverage_change_ci": [
+      -0.003072509765625,
+      0.003485260009765625
+    ],
+    "stick_fraction_change": 0.000286865234375,
+    "stick_fraction_change_ci": [
+      -0.0016328938802083334,
+      0.00211212158203125
+    ],
+    "delta_elongation": 0.43072429172319665,
+    "delta_elongation_ci": [
+      0.31924399455862085,
+      0.5426078026105727
+    ],
+    "delta_area": 7.008333333333334,
+    "delta_area_ci": [
+      4.6,
+      9.68375
+    ],
+    "delta_skeleton": 0.9166666666666666,
+    "delta_skeleton_ci": [
+      0.6166666666666667,
+      1.2252083333333332
+    ],
+    "new_blob": 0.275,
+    "new_blob_ci": [
+      0.2,
+      0.35833333333333334
+    ],
+    "stick_near": 0.025,
+    "stick_near_ci": [
+      0.0,
+      0.058333333333333334
+    ]
+  }
+}

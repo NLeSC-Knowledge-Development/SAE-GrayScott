@@ -1,0 +1,7 @@
+integrating blob: F=0.026, k=0.059
+  coverage 0.119, 24 components, elongation median 1.22 / max 1.52, stick cells 0.00
+integrating sticks: F=0.036, k=0.062
+  coverage 0.254, 19 components, elongation median 3.82 / max 9.21, stick cells 0.75
+
+wrote figures/regimes_two.png
+wrote model/system.json

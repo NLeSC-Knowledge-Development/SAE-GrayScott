@@ -1,0 +1,16 @@
+{
+  "gif": "disc_threshold.gif",
+  "radius": 4,
+  "amplitudes": [
+    0.1,
+    0.2
+  ],
+  "steps": 900,
+  "steps_per_frame": 15,
+  "frames": 61,
+  "fps": 10,
+  "final_coverage": [
+    0.0,
+    0.0751953125
+  ]
+}

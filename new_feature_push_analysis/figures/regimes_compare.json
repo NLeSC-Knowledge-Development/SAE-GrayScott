@@ -1,0 +1,11 @@
+{
+  "gif": "regimes_compare.gif",
+  "same_seed": 0,
+  "warm_up_steps": 10000,
+  "animated_steps": 4000,
+  "steps_per_frame": 40,
+  "frames": 101,
+  "fps": 10,
+  "main_final_coverage": 0.119384765625,
+  "stick_final_coverage": 0.2451171875
+}

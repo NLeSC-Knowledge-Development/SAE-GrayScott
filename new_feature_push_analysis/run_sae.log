@@ -1,0 +1,23 @@
+
+layer 'blocks.6': 32 numbers per token, a window of 45 by 45 cells
+  1228800 training tokens from 300 states, 245760 held out
+  the token needs 7 directions for 95% of its variance, 18 for 99%, out of 32
+
+trained the SAE for 120 epochs in 1063s; kept epoch 78
+
+  split    rebuilt
+  train     0.9893
+  val       0.9887
+
+  directions on per token   16  (forced to 16)
+  directions never on       2 of 512
+  the token needs 7 principal directions for 95% of its variance, 18 for 99%, out of 32
+  the 1228800 training tokens were drawn from 300 states across 2 regimes:
+    blob       614400 tokens, reconstruction train 0.9852 / val 0.9838
+    sticks     614400 tokens, reconstruction train 0.9921 / val 0.9922
+
+wrote model/sae.pt
+wrote model/sae_metrics.json
+wrote figures/sae.png
+wrote figures/sae_training.png
+wrote figures/sae_firing_rates.png

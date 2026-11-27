@@ -1,0 +1,37 @@
+
+selection: component
+  component direction 233: main-regime stick-vs-round AUROC 0.931 discovery, 0.815 test; permutation p 0.0010
+  matched non-shape direction 36; signed direction 246 x -1
+
+injection in the main regime, 120 pairs, 3 sites, 20 calls
+  condition                           new blob  stick near  RMS change      dE   d stick   truth
+  stick direction, stick shape             12%          1%      0.1854   0.165    0.0005     83%
+  blob direction, stick shape               5%          0%      0.0738   0.070    0.0004     92%
+  non-shape direction, stick shape          3%          1%      0.1080   0.089    0.0004     92%
+  signed round direction, stick shape        6%          1%      0.0700   0.110    0.0002     92%
+  probe direction, stick shape             14%          2%      0.2233   0.220    0.0005     83%
+  random direction, stick shape            11%          2%      0.1331   0.189    0.0002    100%
+  stick direction, disc shape              41%          2%      0.7504   0.593   -0.0010     83%
+  random directions: new blob 0%, ΔE +0.000
+
+stick-regime intervention:
+  ablate stick feature           ΔE +0.000 [+0.000, +0.000], ΔmaxE +0.000 [+0.000, +0.000], Δstick +0.0000
+  boost stick feature            ΔE +0.002 [+0.000, +0.005], ΔmaxE +0.000 [+0.000, +0.000], Δstick +0.0000
+  ablate non-shape direction     ΔE +0.000 [+0.000, +0.000], ΔmaxE +0.000 [+0.000, +0.000], Δstick +0.0000
+  boost signed round feature     ΔE +0.000 [+0.000, +0.000], ΔmaxE +0.000 [+0.000, +0.000], Δstick +0.0000
+  physical erase component       ΔE +0.134 [+0.072, +0.196], ΔmaxE -1.068 [-1.253, -0.883], Δstick +0.0007
+
+equation twin on 12 blank sites (new blob rate by peak |Δv|):
+  stick direction, stick shape      0.15: 83%, 0.25: 83%
+  blob direction, stick shape       0.15: 83%, 0.25: 83%
+  non-shape direction, stick shape  0.15: 83%, 0.25: 83%
+  signed round direction, stick shape0.15: 83%, 0.25: 83%
+  probe direction, stick shape      0.15: 83%, 0.25: 83%
+  random direction, stick shape     0.15: 92%, 0.25: 75%
+  stick direction, disc shape       0.15: 83%, 0.25: 75%
+  direct physical stick: 0.15: 100%, 0.25: 100%
+
+wrote model/stick.json
+wrote figures/stick_injection.png
+wrote figures/stick_outcomes.png
+wrote figures/stick_shape_outcomes.png

@@ -1,0 +1,82 @@
+{
+  "F": [
+    0.026,
+    0.036
+  ],
+  "k": [
+    0.059,
+    0.062
+  ],
+  "names": [
+    "blob",
+    "sticks"
+  ],
+  "measurements": [
+    [
+      {
+        "step": 4000,
+        "coverage": 0.239013671875,
+        "components": 27,
+        "elongation_median": 1.0766475077423645,
+        "elongation_max": 1.827786101234024,
+        "area_median": 38.0,
+        "stick_coverage": 0.0,
+        "stick_cell_fraction": 0.0
+      },
+      {
+        "step": 8000,
+        "coverage": 0.21923828125,
+        "components": 23,
+        "elongation_median": 1.1571487231707178,
+        "elongation_max": 1.9622009964282372,
+        "area_median": 39.0,
+        "stick_coverage": 0.0,
+        "stick_cell_fraction": 0.0
+      },
+      {
+        "step": 12000,
+        "coverage": 0.119384765625,
+        "components": 24,
+        "elongation_median": 1.224744871391589,
+        "elongation_max": 1.515128106613212,
+        "area_median": 20.5,
+        "stick_coverage": 0.0,
+        "stick_cell_fraction": 0.0
+      }
+    ],
+    [
+      {
+        "step": 4000,
+        "coverage": 0.255126953125,
+        "components": 19,
+        "elongation_median": 3.7210308786791613,
+        "elongation_max": 8.0599116170669,
+        "area_median": 52.0,
+        "stick_coverage": 0.5263157894736842,
+        "stick_cell_fraction": 0.737799043062201
+      },
+      {
+        "step": 8000,
+        "coverage": 0.250732421875,
+        "components": 19,
+        "elongation_median": 3.645152094267199,
+        "elongation_max": 8.877939306334559,
+        "area_median": 55.0,
+        "stick_coverage": 0.5263157894736842,
+        "stick_cell_fraction": 0.7439143135345667
+      },
+      {
+        "step": 12000,
+        "coverage": 0.254150390625,
+        "components": 19,
+        "elongation_median": 3.8214196321393135,
+        "elongation_max": 9.211048400853636,
+        "area_median": 54.0,
+        "stick_coverage": 0.5263157894736842,
+        "stick_cell_fraction": 0.7521613832853026
+      }
+    ]
+  ],
+  "steps_between": 4000,
+  "warm_up": 2000
+}
